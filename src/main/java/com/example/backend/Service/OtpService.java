@@ -1,13 +1,15 @@
 package com.example.backend.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OtpService {
 
-    @Autowired
-    private EmailService emailService;
+    private final EmailService emailService;
+
+    public OtpService(EmailService emailService) {
+        this.emailService = emailService;
+    }
 
     // Génère un code OTP de 4 chiffres
     public String generateOtp() {

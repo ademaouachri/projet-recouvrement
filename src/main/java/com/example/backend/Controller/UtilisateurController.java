@@ -2,21 +2,26 @@ package com.example.backend.Controller;
 
 import com.example.backend.Model.Utilisateur;
 import com.example.backend.Service.UtilisateurService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
 public class UtilisateurController {
 
-    @Autowired
-    private UtilisateurService utilisateurService;
+    private final UtilisateurService utilisateurService;
+
+    public UtilisateurController(UtilisateurService utilisateurService) {
+        this.utilisateurService = utilisateurService;
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody Utilisateur user) {
+    public ResponseEntity<String> register(@Valid @RequestBody Utilisateur user) {
         utilisateurService.registerUser(user);
         return ResponseEntity.ok("OTP envoyé (voir console) ✅");
     }
@@ -41,5 +46,23 @@ public class UtilisateurController {
         } else {
             return ResponseEntity.badRequest().body("Erreur : " + result + " ❌");
         }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Utilisateur> getUtilisateurById(@PathVariable UUID id) {
+        return utilisateurService.getUtilisateurById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public Utilisateur updateUtilisateur(@PathVariable UUID id, @Valid @RequestBody Utilisateur user) {
+        return utilisateurService.updateUtilisateur(id, user);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUtilisateur(@PathVariable UUID id) {
+        utilisateurService.deleteUtilisateur(id);
+        return ResponseEntity.noContent().build();
     }
 }

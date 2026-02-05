@@ -1,8 +1,13 @@
 package com.example.backend.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "PROFILS")
@@ -13,14 +18,16 @@ import lombok.*;
 @Builder
 public class Profil {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue
+    @UuidGenerator
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
-    @NotNull(message = "Le libellé ne peut pas être nul")
+    @NotBlank(message = "Le libellé ne peut pas être nul")
     private String libelle;
 
     @Column(name = "CODE_PROFIL")
-    @NotNull(message = "Le code profil est obligatoire")
+    @NotBlank(message = "Le code profil est obligatoire")
     private String codeProfil;
 
     @NotNull(message = "L'activité est obligatoire")
@@ -35,7 +42,7 @@ public class Profil {
     @NotNull(message = "La région est obligatoire")
     private Integer region;
 
-    @NotNull(message = "La structure est obligatoire")
+    @NotBlank(message = "La structure est obligatoire")
     private String structure;
 
     @NotNull(message = "Le palier est obligatoire")

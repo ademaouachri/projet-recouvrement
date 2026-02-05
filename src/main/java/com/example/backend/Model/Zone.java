@@ -1,8 +1,7 @@
 package com.example.backend.Model;
 
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,17 +12,8 @@ import lombok.Setter;
 @Table(name = "ZONE")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 
-public class Zone {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
 
-    @NotNull(message = "Le code est obligatoire")
-    private String code;
+public class Zone extends BaseEntity {
 
-    @NotNull(message = "Le label est obligatoire")
-    private String label;
 }

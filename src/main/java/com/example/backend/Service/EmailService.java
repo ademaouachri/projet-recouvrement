@@ -2,19 +2,21 @@ package com.example.backend.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+
+    public EmailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     public void sendOtpEmail(String toEmail, String otp) throws MessagingException {
 
@@ -24,29 +26,26 @@ public class EmailService {
         helper.setTo(toEmail);
         helper.setSubject("Code de vérification");
 
-        String htmlContent =
-                "<html>" +
-                        "<body style='font-family: Arial; background-color: #f4f4f4; padding: 20px;'>" +
-                        "<div style='background: white; padding: 20px; border-radius: 8px; text-align: center;'>" +
+        String htmlContent = "<html>" +
+                "<body style='font-family: Arial; background-color: #f4f4f4; padding: 20px;'>" +
+                "<div style='background: white; padding: 20px; border-radius: 8px; text-align: center;'>" +
 
-                        // LOGO
-                        "<img src='cid:logoImage' style='width:100px; margin-bottom:20px;' />" +
+                // LOGO
+                "<img src='cid:logoImage' style='width:100px; margin-bottom:20px;' />" +
 
-                        "<h2 style='color: #333;'>🔐 Code de vérification</h2>" +
-                        "<p style='font-size: 16px;'>Votre code de vérification est :</p>" +
-                        "<h1 style='color: #007BFF; letter-spacing: 4px;'>" + otp + "</h1>" +
-                        "<p style='color: #777;'>Ne partagez ce code avec personne.</p>" +
-                        "</div>" +
-                        "</body>" +
-                        "</html>";
+                "<h2 style='color: #333;'>🔐 Code de vérification</h2>" +
+                "<p style='font-size: 16px;'>Votre code de vérification est :</p>" +
+                "<h1 style='color: #007BFF; letter-spacing: 4px;'>" + otp + "</h1>" +
+                "<p style='color: #777;'>Ne partagez ce code avec personne.</p>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
 
         helper.setText(htmlContent, true);
 
-
         helper.addInline(
                 "logoImage",
-                new ClassPathResource("static/logo.png")
-        );
+                new ClassPathResource("static/logo.png"));
 
         mailSender.send(message);
     }

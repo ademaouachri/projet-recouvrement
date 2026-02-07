@@ -21,7 +21,6 @@ public abstract class BaseEntity {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-
     @NotBlank(message = "Le code est obligatoire")
     private String code;
 

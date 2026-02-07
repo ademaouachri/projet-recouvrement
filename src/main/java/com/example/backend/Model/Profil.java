@@ -1,12 +1,14 @@
 package com.example.backend.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.util.ArrayList; // زيادة الـ Import هذا أحسن
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -15,7 +17,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Profil {
     @Id
     @GeneratedValue
@@ -57,4 +58,11 @@ public class Profil {
     @NotNull(message = "Le centre d'affaire est obligatoire")
     @Column(name = "CENTRE_AFFAIRE")
     private Integer centreAffaire;
+
+
+    @OneToMany(mappedBy = "profil")
+    @JsonIgnoreProperties("profil")
+    private List<Utilisateur> utilisateurs = new ArrayList<>();
+
+
 }

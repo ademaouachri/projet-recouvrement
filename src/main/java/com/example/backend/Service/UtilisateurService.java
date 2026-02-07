@@ -1,6 +1,10 @@
 package com.example.backend.Service;
 
+import com.example.backend.Exception.ResourceNotFoundException;
+import com.example.backend.Model.Profil;
 import com.example.backend.Model.Utilisateur;
+
+import com.example.backend.Repository.ProfilRepository;
 import com.example.backend.Repository.UtilisateurRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -10,14 +14,26 @@ import java.util.UUID;
 public class UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
+    private final ProfilRepository profilRepository;
     private final OtpService otpService;
 
-    public UtilisateurService(UtilisateurRepository utilisateurRepository, OtpService otpService) {
+    public UtilisateurService(UtilisateurRepository utilisateurRepository, OtpService otpService,
+            ProfilRepository profilRepository) {
         this.utilisateurRepository = utilisateurRepository;
         this.otpService = otpService;
+        this.profilRepository = profilRepository;
     }
 
     public void registerUser(Utilisateur user) {
+        if (user.getProfil() != null && user.getProfil().getId() != null) {
+            // نلوجو على البروفيل اللي بعثت الـ ID متاعو في Postman
+            Profil existingProfil = profilRepository.findById(user.getProfil().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Profil non trouvé avec l'id : " + user.getProfil().getId()));
+
+            // نربطو الـ user بالبروفيل الكامل اللي جبناه من قاعدة البيانات
+            user.setProfil(existingProfil);
+        }
         // Générer OTP et enregistrer
         String otp = otpService.generateOtp();
         user.setOtp(otp);
@@ -63,7 +79,7 @@ public class UtilisateurService {
             user.setPrenom(userDetails.getPrenom());
             user.setEmail(userDetails.getEmail());
             return utilisateurRepository.save(user);
-        }).orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'id : " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id : " + id));
     }
 
     public void deleteUtilisateur(UUID id) {

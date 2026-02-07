@@ -1,5 +1,6 @@
 package com.example.backend.Service;
 
+import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.Zone;
 import com.example.backend.Repository.ZoneRepository;
 
@@ -35,7 +36,7 @@ public class ZoneService {
             zone.setCode(zoneDetails.getCode());
             zone.setLabel(zoneDetails.getLabel());
             return zoneRepository.save(zone);
-        }).orElseThrow(() -> new RuntimeException("Zone non trouvée avec l'id : " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Zone non trouvée avec l'id : " + id));
     }
 
     public void deleteZone(UUID id) {

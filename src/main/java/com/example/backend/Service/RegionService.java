@@ -1,5 +1,6 @@
 package com.example.backend.Service;
 
+import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.Region;
 import com.example.backend.Repository.RegionRepository;
 
@@ -39,7 +40,7 @@ public class RegionService {
             region.setCode(regionDetails.getCode());
             region.setLabel(regionDetails.getLabel());
             return regionRepository.save(region);
-        }).orElseThrow(() -> new RuntimeException("Region non trouvée avec l'id : " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Region non trouvée avec l'id : " + id));
     }
 
     public void deleteRegion(UUID id) {

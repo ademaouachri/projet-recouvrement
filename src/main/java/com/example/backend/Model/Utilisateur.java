@@ -1,5 +1,6 @@
 package com.example.backend.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -41,4 +42,9 @@ public class Utilisateur {
 
     @Column(name = "ENABLED")
     private Boolean enabled = false;
+
+    @ManyToOne
+    @JoinColumn(name = "profil_id")
+    @JsonIgnoreProperties("utilisateurs")
+    private Profil profil;
 }

@@ -1,7 +1,10 @@
 package com.example.backend.Service;
 
 import com.example.backend.Exception.ResourceNotFoundException;
+import com.example.backend.Model.Marche;
 import com.example.backend.Model.Segment;
+import com.example.backend.Model.Zone;
+import com.example.backend.Repository.MarcheRepository;
 import com.example.backend.Repository.SegmentRepository;
 
 import org.springframework.stereotype.Service;
@@ -14,12 +17,24 @@ import java.util.UUID;
 public class SegmentService {
 
     private final SegmentRepository segmentRepository;
+    private final MarcheRepository marcheRepository;
 
-    public SegmentService(SegmentRepository segmentRepository) {
+    public SegmentService(SegmentRepository segmentRepository, MarcheRepository marcheRepository) {
+        this.marcheRepository = marcheRepository;
         this.segmentRepository = segmentRepository;
     }
 
     public Segment createSegment(Segment segment) {
+        if (segment.getMarche() == null || segment.getMarche() .getId() == null) {
+            throw new ResourceNotFoundException("marche must be provided with a valid ID");
+        }
+        UUID marcheId =  segment.getMarche() .getId();
+
+        // fetch Zone from database
+        Marche marche = marcheRepository.findById(marcheId)
+                .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + marcheId));
+        segment.setMarche(marche);
+
         return segmentRepository.save(segment);
     }
 

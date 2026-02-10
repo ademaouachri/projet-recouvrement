@@ -1,7 +1,7 @@
 package com.example.backend.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -10,4 +10,9 @@ import lombok.*;
 @Setter
 
 public class Segment extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "march_id")
+    @JsonIgnoreProperties("segments")
+    private  Marche marche;
 }

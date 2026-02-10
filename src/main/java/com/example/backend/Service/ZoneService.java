@@ -20,7 +20,10 @@ public class ZoneService {
     }
 
     public Zone createZone(Zone zone) {
-        return zoneRepository.save(zone);
+        if (zone.getRegions() != null) {
+            zone.getRegions().forEach(region -> region.setZone(zone));
+        }
+        return zoneRepository.saveAndFlush(zone);
     }
 
     public List<Zone> getAllZones() {

@@ -43,7 +43,7 @@ public class Utilisateur {
     @Column(name = "ENABLED")
     private Boolean enabled = false;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "profil_id")
     @JsonIgnoreProperties("utilisateurs")
     private Profil profil;

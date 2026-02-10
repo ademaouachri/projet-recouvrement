@@ -2,6 +2,7 @@ package com.example.backend.Service;
 
 import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.Marche;
+import com.example.backend.Model.Segment;
 import com.example.backend.Repository.MarcheRepository;
 
 import org.springframework.stereotype.Service;

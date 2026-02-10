@@ -25,23 +25,33 @@ public class UtilisateurService {
     }
 
     public void registerUser(Utilisateur user) {
-        if (user.getProfil() != null && user.getProfil().getId() != null) {
-            // نلوجو على البروفيل اللي بعثت الـ ID متاعو في Postman
-            Profil existingProfil = profilRepository.findById(user.getProfil().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Profil non trouvé avec l'id : " + user.getProfil().getId()));
-
-            // نربطو الـ user بالبروفيل الكامل اللي جبناه من قاعدة البيانات
-            user.setProfil(existingProfil);
+        if (utilisateurRepository.existsByMatricule(user.getMatricule().trim())) {
+            throw new IllegalArgumentException("Le matricule est déjà utilisé !");
         }
-        // Générer OTP et enregistrer
-        String otp = otpService.generateOtp();
-        user.setOtp(otp);
-        user.setEnabled(false);
-        utilisateurRepository.save(user);
+        if (user.getProfil() != null) {
+            if (user.getProfil().getId() != null) {
+                Profil existingProfil = profilRepository.findById(user.getProfil().getId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Profil non trouvé avec l'id : " + user.getProfil().getId()));
+                user.setProfil(existingProfil);
+            } else {
+                Profil savedProfil = profilRepository.save(user.getProfil());
+                user.setProfil(savedProfil);
+            }
+        }
+        try {
 
-        otpService.sendOtp(user.getEmail(), otp);
+            String otp = otpService.generateOtp();
+            user.setOtp(otp);
+            user.setEnabled(false);
+            Utilisateur savedUser = utilisateurRepository.save(user);
+            otpService.sendOtp(savedUser.getEmail(), otp);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'enregistrement de l'utilisateur : " + e.getMessage());
+        }
     }
+
 
     public String verifyUserOtp(String email, String otpInput) {
         if (email == null || otpInput == null) {

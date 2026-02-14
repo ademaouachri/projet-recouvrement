@@ -11,6 +11,8 @@ import lombok.*;
 
 public class Segment extends BaseEntity {
 
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "march_id")
     @JsonIgnoreProperties("segments")

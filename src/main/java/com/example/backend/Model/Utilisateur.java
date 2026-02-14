@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -47,4 +49,22 @@ public class Utilisateur {
     @JoinColumn(name = "profil_id")
     @JsonIgnoreProperties("utilisateurs")
     private Profil profil;
+
+    @ManyToMany
+    @JoinTable(
+            name = "utilisateur_palier",
+            joinColumns = @JoinColumn(name = "utilisateur_id"),
+            inverseJoinColumns = @JoinColumn(name = "palier_id")
+    )
+    @JsonIgnoreProperties("utilisateurs")
+    private List<Palier> paliers = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "utilisateur_zone",
+            joinColumns = @JoinColumn(name = "utilisateur_id"),
+            inverseJoinColumns = @JoinColumn(name = "zone_id")
+    )
+    @JsonIgnoreProperties("utilisateurs")
+    private  List<Zone>zones = new ArrayList<>();
 }

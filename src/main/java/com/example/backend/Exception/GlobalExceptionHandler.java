@@ -39,4 +39,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String,String>> handleGlobal(Exception ex){
+        Map<String,String> error = new HashMap<>();
+        error.put("message","Unexpected error");
+        error.put("details", ex.getMessage());
+        return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }

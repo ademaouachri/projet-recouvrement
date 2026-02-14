@@ -3,6 +3,7 @@ package com.example.backend.Service;
 import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.Profil;
 import com.example.backend.Repository.ProfilRepository;
+import com.example.backend.Repository.UtilisateurRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -11,9 +12,11 @@ import java.util.UUID;
 public class ProfilService {
 
     private final ProfilRepository profilRepository;
+    private final UtilisateurRepository utilisateurRepository;
 
-    public ProfilService(ProfilRepository profilRepository) {
+    public ProfilService(ProfilRepository profilRepository , UtilisateurRepository utilisateurRepository) {
         this.profilRepository = profilRepository;
+        this.utilisateurRepository = utilisateurRepository;
     }
 
     public Profil createProfil(Profil profil) {
@@ -46,17 +49,15 @@ public class ProfilService {
     }
 
     public void deleteProfil(UUID id) {
-        // 1. التثبت من وجود البروفيل أولاً
+
         Profil profil = profilRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Profil non trouvé avec l'id : " + id));
 
-        // 2. التثبت إذا كان هناك مستخدمون مرتبطون بهذا البروفيل
-        if (profil.getUtilisateurs() != null && !profil.getUtilisateurs().isEmpty()) {
-            throw new RuntimeException("Impossible de supprimer ce profil : il est lié à "
-                    + profil.getUtilisateurs().size() + " utilisateur(s) ❌");
-        }
 
-        // 3. الحذف يتم فقط إذا كان البروفيل فارغاً
+
+        if(utilisateurRepository.existsByProfilId(id)){
+            throw new ResourceNotFoundException("Profil utilisé par des utilisateurs");
+        }
         profilRepository.deleteById(id);
     }
 }

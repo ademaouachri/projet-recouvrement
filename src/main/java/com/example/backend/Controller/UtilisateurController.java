@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -32,7 +33,7 @@ public class UtilisateurController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<String> verify(@RequestBody java.util.Map<String, String> request) {
+    public ResponseEntity<String> verify(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String otp = request.get("otp");
 

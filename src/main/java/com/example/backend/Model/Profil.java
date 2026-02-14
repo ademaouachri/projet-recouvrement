@@ -60,9 +60,7 @@ public class Profil {
     private Integer centreAffaire;
 
 
-    @OneToMany(mappedBy = "profil" )
-    @JsonIgnoreProperties("profil")
-    private List<Utilisateur> utilisateurs = new ArrayList<>();
+
 
 
 }

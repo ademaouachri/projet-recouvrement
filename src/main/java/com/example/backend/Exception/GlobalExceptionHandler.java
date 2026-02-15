@@ -2,6 +2,7 @@ package com.example.backend.Exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -46,5 +47,14 @@ public class GlobalExceptionHandler {
         error.put("details", ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class})
+    public ResponseEntity<Map<String, String>> handleInvalidFormat(HttpMessageNotReadableException ex) {
+        Map<String,String> error = new HashMap<>();
+        error.put("message","Invalid input format");
+        error.put("details", ex.getMostSpecificCause().getMessage());
+        error.put("timestamp", java.time.LocalDateTime.now().toString());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 
 }

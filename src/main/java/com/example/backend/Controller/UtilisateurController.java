@@ -61,9 +61,15 @@ public class UtilisateurController {
         return utilisateurService.updateUtilisateur(id, user);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUtilisateur(@PathVariable UUID id) {
-        utilisateurService.deleteUtilisateur(id);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{id}/active")
+    public ResponseEntity<String> activateOrDeactivateUtilisateur(
+            @PathVariable UUID id,
+            @RequestParam Boolean active) {
+
+        String message = utilisateurService.activateOrDeactivateUtilisateur(id, active);
+
+        return ResponseEntity.ok(message);
     }
+
+
 }

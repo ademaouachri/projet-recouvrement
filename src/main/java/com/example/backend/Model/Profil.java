@@ -2,6 +2,8 @@ package com.example.backend.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -31,33 +33,49 @@ public class Profil {
     @NotBlank(message = "Le code profil est obligatoire")
     private String codeProfil;
 
-    @NotNull(message = "L'activité est obligatoire")
-    private Integer activite;
-
-    @NotNull(message = "L'agence est obligatoire")
-    private Integer agence;
-
-    @NotNull(message = "La zone est obligatoire")
-    private Integer zone;
-
-    @NotNull(message = "La région est obligatoire")
-    private Integer region;
-
     @NotBlank(message = "La structure est obligatoire")
     private String structure;
 
-    @NotNull(message = "Le palier est obligatoire")
-    private Integer palier;
 
-    @NotNull(message = "Le segment est obligatoire")
-    private Integer segment;
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer activite = 0;
 
-    @NotNull(message = "Le marché est obligatoire")
-    private Integer marche;
 
-    @NotNull(message = "Le centre d'affaire est obligatoire")
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer agence = 0;
+
+
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer zone = 0;
+
+
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer region = 0;
+
+
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer palier = 0;
+
+
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer segment = 0;
+
+
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
+    private Integer marche = 0;
+
+
+    @Min(value = 0, message = "La valeur minimale est 0")
+    @Max(value = 1, message = "La valeur maximale est 1")
     @Column(name = "CENTRE_AFFAIRE")
-    private Integer centreAffaire;
+    private Integer centreAffaire = 0;
 
 
 

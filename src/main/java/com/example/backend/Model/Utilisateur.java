@@ -45,6 +45,11 @@ public class Utilisateur {
     @Column(name = "ENABLED")
     private Boolean enabled = false;
 
+
+    @Column(name = "utilisateur_active")
+    private Boolean utilisateurActive = false;
+
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "profil_id")
     @JsonIgnoreProperties("utilisateurs")
@@ -67,4 +72,52 @@ public class Utilisateur {
     )
     @JsonIgnoreProperties("utilisateurs")
     private  List<Zone>zones = new ArrayList<>();
+
+
+
+    @ManyToMany
+    @JoinTable(name = "utilisateur_region",
+    joinColumns = @JoinColumn(name = "utilisateur_id")
+    ,inverseJoinColumns = @JoinColumn(name = "region_id"))
+    private List<Region> regions = new ArrayList<>();
+
+
+    @ManyToMany
+    @JoinTable(name = "utilisateur_segment",
+            joinColumns = @JoinColumn(name = "utilisateur_id")
+            ,inverseJoinColumns = @JoinColumn(name = "segment_id"))
+    private List<Segment> segments = new ArrayList<>();
+
+
+    @ManyToMany
+    @JoinTable(name = "utilisateur_marche",
+            joinColumns = @JoinColumn(name = "utilisateur_id")
+            ,inverseJoinColumns = @JoinColumn(name = "marche_id"))
+    private List<Marche> marches = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(name = "utilisateur_centreAffaire",
+            joinColumns = @JoinColumn(name = "utilisateur_id")
+            ,inverseJoinColumns = @JoinColumn(name = "centreAffaire_id"))
+    private List<CentreAffaire> centreAffaires = new ArrayList<>();
+
+
+    @ManyToMany
+    @JoinTable(name = "utilisateur_activite",
+            joinColumns = @JoinColumn(name = "utilisateur_id")
+            ,inverseJoinColumns = @JoinColumn(name = "activite_id"))
+    private List<Activite> activites = new ArrayList<>();
+
+
+
+    @ManyToMany
+    @JoinTable(name = "utilisateur_agence",
+            joinColumns = @JoinColumn(name = "utilisateur_id")
+            ,inverseJoinColumns = @JoinColumn(name = "agence_id"))
+    private List<Agence> agences = new ArrayList<>();
+
+
+
+
+
 }

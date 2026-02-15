@@ -14,7 +14,5 @@ import java.util.List;
 @Getter
 @Setter
 public class Marche extends BaseEntity {
-    @OneToMany(mappedBy = "marche", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties("marche")
-    private List<Segment>segments;
+
 }

@@ -12,8 +12,6 @@ import java.util.List;
 @Setter
 public class Zone extends BaseEntity {
 
-    @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JsonIgnoreProperties("zone")
-    private List<Region> regions = new java.util.ArrayList<>();
+
 
 }

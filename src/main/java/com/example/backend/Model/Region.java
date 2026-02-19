@@ -11,8 +11,5 @@ import java.util.List;
 @Getter
 @Setter
 public class Region extends BaseEntity {
-    @ManyToOne
-    @JoinColumn(name = "zone_id")
-    @JsonIgnoreProperties("regions")
-    private Zone zone;
+
 }

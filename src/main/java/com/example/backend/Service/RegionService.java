@@ -25,19 +25,6 @@ public class RegionService {
     }
 
     public Region createRegion(Region region) {
-        // Validation: Ensure Zone and Zone ID are provided
-        if (region.getZone() == null || region.getZone().getId() == null) {
-            throw new ResourceNotFoundException("Zone must be provided with a valid ID");
-        }
-
-        UUID zoneId = region.getZone().getId();
-
-        // fetch Zone from database
-        Zone zone = zoneRepository.findById(zoneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + zoneId));
-
-        region.setZone(zone);
-
         return regionRepository.save(region);
     }
 

@@ -17,7 +17,7 @@ public class OtpService {
         return String.valueOf(otp);
     }
 
-    // Envoie l'OTP par email
+
     public void sendOtp(String email, String otp) {
         try {
             emailService.sendOtpEmail(email, otp);
@@ -27,6 +27,8 @@ public class OtpService {
             e.printStackTrace();
         }
     }
+
+
 
     public boolean verifyOtp(String inputOtp, String actualOtp) {
 

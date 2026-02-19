@@ -28,15 +28,13 @@ public class SegmentService {
         if (segment.getMarche() == null || segment.getMarche() .getId() == null) {
             throw new ResourceNotFoundException("marche must be provided with a valid ID");
         }
-        UUID marcheId =  segment.getMarche() .getId();
-
-        // fetch Zone from database
-        Marche marche = marcheRepository.findById(marcheId)
+        else {
+            UUID marcheId =  segment.getMarche() .getId();
+            Marche marche = marcheRepository.findById(marcheId)
                 .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + marcheId));
-        segment.setMarche(marche);
-
-        return segmentRepository.save(segment);
-    }
+             segment.setMarche(marche);
+             return segmentRepository.save(segment);
+    }}
 
     public List<Segment> getAllSegments() {
         return segmentRepository.findAll();
@@ -50,6 +48,12 @@ public class SegmentService {
         return segmentRepository.findById(id).map(segment -> {
             segment.setCode(segmentDetails.getCode());
             segment.setLabel(segmentDetails.getLabel());
+
+            UUID marcheId =  segmentDetails.getMarche() .getId();
+            Marche marche = marcheRepository.findById(marcheId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + marcheId));
+            segmentDetails.setMarche(marche);
+            segment.setMarche(segmentDetails.getMarche());
             return segmentRepository.save(segment);
         }).orElseThrow(() -> new ResourceNotFoundException("Segment non trouvé avec l'id : " + id));
     }

@@ -28,7 +28,6 @@ public class PalierService {
     public Palier createPalier(Palier palier) {
         return palierRepository.save(palier);
 
-
     }
 
     public List<Palier> getAllPaliers() {

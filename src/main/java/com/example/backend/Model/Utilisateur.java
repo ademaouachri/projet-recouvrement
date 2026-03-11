@@ -88,4 +88,12 @@ public class Utilisateur {
         @JoinTable(name = "utilisateur_agence", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "agence_id"))
         private List<Agence> agences = new ArrayList<>();
 
+
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Structure structure; // Le rôle = structure
+
+
 }

@@ -33,8 +33,11 @@ public class Profil {
     @NotBlank(message = "Le code profil est obligatoire")
     private String codeProfil;
 
-    @NotBlank(message = "La structure est obligatoire")
-    private String structure;
+
+
+    @NotNull(message = "La structure est obligatoire")
+    @Enumerated(EnumType.STRING)
+    private Structure structure;
 
 
     @Min(value = 0, message = "La valeur minimale est 0")

@@ -1,0 +1,83 @@
+[33mcommit 599c80984f697e82be52bf16d0c79c0156cfa151[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Fri Mar 6 00:47:00 2026 +0100
+
+    Spring Security avec JWT - login/logout/me
+
+[33mcommit b8011b326349593b714e1908431027a7b35d5953[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Thu Feb 19 04:35:17 2026 +0100
+
+    kol chy hader
+
+[33mcommit 33a8145865e8516290c43ff83d21ebe83b6d3931[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Mon Feb 16 00:24:50 2026 +0100
+
+    mysql c bon
+
+[33mcommit 4ba1d9d63a17eb123ab3ab38acd659986889feba[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Sun Feb 15 03:28:09 2026 +0100
+
+    c bon
+
+[33mcommit 6a1ec66e5f471754970dd8eab2054f2edbb2c5d9[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Sat Feb 14 23:01:40 2026 +0100
+
+    333333
+
+[33mcommit 3dbf8ff8de9d485f3135e699f22678155facd0ca[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Tue Feb 10 23:27:38 2026 +0100
+
+    add agence
+
+[33mcommit a6cb4fb4ea4795106f111007a0de2e0b76767fce[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Tue Feb 10 01:57:31 2026 +0100
+
+    2222222
+
+[33mcommit fe70fd51834d283b8c8522dc5398637348d33857[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Tue Feb 10 01:13:57 2026 +0100
+
+    1111111
+
+[33mcommit 3cd80c35952a98f90fc227f3a19f712c0d011855[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Sat Feb 7 23:51:25 2026 +0100
+
+    Fix: Correction des erreurs JPA et ajout messages d'erreur personnalisés
+    
+    - Ajout @MappedSuperclass à BaseEntity pour l'héritage JPA
+    - Création de ResourceNotFoundException pour erreurs 404
+    - Mise à jour GlobalExceptionHandler pour capturer ResourceNotFoundException
+    - Modification de tous les services pour utiliser ResourceNotFoundException
+    - Retour de messages d'erreur clairs avec code HTTP 404 au lieu de 500
+
+[33mcommit f65401ec12cea5c5ea278f4dcf602095ae668584[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Thu Feb 5 09:13:05 2026 +0100
+
+    Initial commit
+
+[33mcommit 7b938ed9e563315e4bf0468b69c164e8340e63af[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Tue Feb 3 02:07:04 2026 +0100
+
+    Initial commit: Add backend project files
+
+[33mcommit 318bcf715dbb29d5c8fe2283e30e985723c03d17[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Fri Jan 30 11:35:11 2026 +0100
+
+    Initial commit of backend project
+
+[33mcommit d9372adc36a13a1ac78825bed22ed369fff9a289[m
+Author: ademaouachri <ademawchri04@gmail.com>
+Date:   Thu Feb 5 09:09:30 2026 +0100
+
+    Initial commit without backend

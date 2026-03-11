@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UtilisateurService {
@@ -26,28 +27,30 @@ public class UtilisateurService {
     private final SegmentRepository segmentRepository;
     private final MdpService mdpService;
     private final GenerateurMotDePasseService generateurMotDePasseService;
+    private final PasswordEncoder passwordEncoder;
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository, OtpService otpService,
             ProfilRepository profilRepository, PalierRepository palierRepository, ZoneRepository zoneRepository,
             RegionRepository regionRepository, ActiviteRepository activiteRepository,
             SegmentRepository segmentRepository, CentreAffaireRepository centreAffaireRepository,
             MarcheRepository marcheRepository, AgenceRepository agenceRepository, MdpService mdpService,
-            GenerateurMotDePasseService generateurMotDePasseService) {
-
+            GenerateurMotDePasseService generateurMotDePasseService, PasswordEncoder passwordEncoder) {
         this.utilisateurRepository = utilisateurRepository;
+        this.profilRepository = profilRepository;
         this.otpService = otpService;
         this.palierRepository = palierRepository;
-        this.profilRepository = profilRepository;
         this.zoneRepository = zoneRepository;
         this.regionRepository = regionRepository;
         this.activiteRepository = activiteRepository;
+        this.segmentRepository = segmentRepository;
         this.centreAffaireRepository = centreAffaireRepository;
         this.marcheRepository = marcheRepository;
         this.agenceRepository = agenceRepository;
-        this.segmentRepository = segmentRepository;
         this.mdpService = mdpService;
         this.generateurMotDePasseService = generateurMotDePasseService;
+        this.passwordEncoder = passwordEncoder;
     }
+
 
     public void registerUser(Utilisateur user) {
         if (user.getMatricule() == null || user.getMatricule().trim().isEmpty()) {
@@ -69,8 +72,8 @@ public class UtilisateurService {
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 "Profil non trouvé avec l'id : " + user.getProfil().getId()));
                 user.setProfil(existingProfil);
+                user.setStructure(existingProfil.getStructure());
             }
-
         }
 
         if (user.getProfil() != null && user.getProfil().getPalier() == 1) {
@@ -205,6 +208,12 @@ public class UtilisateurService {
             }
         }
 
+        if (user.getStructure() != null && user.getStructure() == Structure.S002) {
+            if (user.getCentreAffaires() == null || user.getCentreAffaires().isEmpty()) {
+                throw new IllegalArgumentException("Le centre d'affaire est obligatoire pour la structure S002");
+            }
+        }
+
         try {
             String otp = otpService.generateOtp();
             user.setOtp(otp);
@@ -233,7 +242,7 @@ public class UtilisateurService {
             String mdp = GenerateurMotDePasseService.generer();
             user.setEnabled(true);
             user.setOtp(null);
-            user.setMotDePasse(mdp);
+            user.setMotDePasse(passwordEncoder.encode(mdp));
             utilisateurRepository.save(user);
 
             mdpService.sendMdp(user.getEmail(), mdp);
@@ -265,6 +274,7 @@ public class UtilisateurService {
                     .orElseThrow(() -> new ResourceNotFoundException("Profil not found"));
 
             user.setProfil(profil);
+            user.setStructure(profil.getStructure());
 
             if (profil.getPalier() == 1) {
                 List<Palier> attachedPaliers = new ArrayList<>();
@@ -397,6 +407,12 @@ public class UtilisateurService {
 
             } else {
                 user.getRegions().clear();
+            }
+
+            if (user.getStructure() != null && user.getStructure() == Structure.S002) {
+                if (user.getCentreAffaires() == null || user.getCentreAffaires().isEmpty()) {
+                    throw new IllegalArgumentException("Le centre d'affaire est obligatoire pour la structure S002");
+                }
             }
 
             return utilisateurRepository.save(user);

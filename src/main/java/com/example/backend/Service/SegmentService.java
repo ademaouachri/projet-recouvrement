@@ -46,9 +46,7 @@ public class SegmentService {
 
     public Segment updateSegment(UUID id, Segment segmentDetails) {
         return segmentRepository.findById(id).map(segment -> {
-            segment.setCode(segmentDetails.getCode());
             segment.setLabel(segmentDetails.getLabel());
-
             UUID marcheId =  segmentDetails.getMarche() .getId();
             Marche marche = marcheRepository.findById(marcheId)
                     .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + marcheId));

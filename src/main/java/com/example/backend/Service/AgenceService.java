@@ -46,7 +46,7 @@ public class AgenceService {
 
     public Agence updateAgence(UUID id, Agence agenceDetails) {
         return agenceRepository.findById(id).map(agence -> {
-            agence.setCode(agenceDetails.getCode());
+
             agence.setLabel(agenceDetails.getLabel());
 
             UUID zoneId = agenceDetails.getZone().getId();

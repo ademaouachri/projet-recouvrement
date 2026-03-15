@@ -20,10 +20,11 @@ public abstract class BaseEntity {
     @UuidGenerator
     @Column(updatable = false, nullable = false)
     private UUID id;
-
+    @Column(unique = true, updatable = false, nullable = false)  // ⬅️ updatable = false مهم
     @NotBlank(message = "Le code est obligatoire")
     private String code;
 
+    @Column(unique = true)
     @NotBlank(message = "Le label est obligatoire")
     private String label;
 }

@@ -71,5 +71,21 @@ public class UtilisateurController {
         return ResponseEntity.ok(message);
     }
 
+    @PostMapping("/set-password")
+    public ResponseEntity<String> setPassword(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        String password = request.get("password");
+
+        if (token == null || password == null)
+            return ResponseEntity.badRequest().body("Token et mot de passe requis ❌");
+
+        String result = utilisateurService.setPassword(token, password);
+
+        if ("OK".equals(result))
+            return ResponseEntity.ok("Mot de passe défini avec succès ✅");
+        else
+            return ResponseEntity.badRequest().body(result);
+    }
+
 
 }

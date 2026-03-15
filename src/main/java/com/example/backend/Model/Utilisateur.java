@@ -43,6 +43,9 @@ public class Utilisateur {
         private String motDePasse;
         private String otp;
 
+    @Column(name = "activation_token")
+    private String activationToken;
+
         @Column(name = "ENABLED")
         private Boolean enabled = false;
 
@@ -91,9 +94,6 @@ public class Utilisateur {
 
 
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Structure structure; // Le rôle = structure
 
 
 }

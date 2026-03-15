@@ -11,12 +11,13 @@ public class MdpService {
         this.emailService = emailService;
     }
 
-    public void sendMdp(String email, String mdp) {
+    // ⬅️ بدّلنا mdp بـ token
+    public void sendActivationLink(String email, String token) {
         try {
-            emailService.sendMotPasse(email, mdp);
-            System.out.println("Email envoyé avec succès à: " + email);
+            emailService.sendActivationEmail(email, token);
+            System.out.println("Email d'activation envoyé à: " + email);
         } catch (Exception e) {
-            System.err.println(" Erreur lors de l'envoi de l'email: " + e.getMessage());
+            System.err.println("Erreur lors de l'envoi de l'email: " + e.getMessage());
             e.printStackTrace();
         }
     }

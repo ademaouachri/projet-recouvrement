@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -29,7 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 String structure = jwtUtil.extractStructure(token);
                List<String> permissions = jwtUtil.extractPermissions(token);
 
-               List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+               List<SimpleGrantedAuthority> authorities = new ArrayList<>();
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + structure));
                 if (permissions != null) {
                     for (String p : permissions) {

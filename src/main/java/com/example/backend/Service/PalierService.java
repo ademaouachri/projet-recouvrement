@@ -40,7 +40,6 @@ public class PalierService {
 
     public Palier updatePalier(UUID id, Palier palierDetails) {
         return palierRepository.findById(id).map(palier -> {
-            palier.setCode(palierDetails.getCode());
             palier.setLabel(palierDetails.getLabel());
             return palierRepository.save(palier);
         }).orElseThrow(() -> new ResourceNotFoundException("Palier non trouvé avec l'id : " + id));

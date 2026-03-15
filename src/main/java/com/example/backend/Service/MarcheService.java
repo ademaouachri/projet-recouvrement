@@ -34,7 +34,7 @@ public class MarcheService {
 
     public Marche updateMarche(UUID id, Marche marcheDetails) {
         return marcheRepository.findById(id).map(marche -> {
-            marche.setCode(marcheDetails.getCode());
+
             marche.setLabel(marcheDetails.getLabel());
             return marcheRepository.save(marche);
         }).orElseThrow(() -> new ResourceNotFoundException("Marche non trouvé avec l'id : " + id));

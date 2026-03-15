@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -17,6 +18,8 @@ public class EmailService {
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
+    @Value("${app.frontend.url}")   // ⬅️ زيد هذا
+    private String frontendUrl;
 
     public void sendOtpEmail(String toEmail, String otp) throws MessagingException {
 
@@ -50,36 +53,37 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public void sendMotPasse(String toEmail,String mdp)throws MessagingException {
+    public void sendActivationEmail(String toEmail, String token) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper= new MimeMessageHelper(message, true, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        String link = frontendUrl + "/set-password?token=" + token; // ⬅️ لينك Angular
 
         helper.setTo(toEmail);
-        helper.setSubject("Votre nouveau mot de passe");
+        helper.setSubject("🔐 Définissez votre mot de passe");
 
         String htmlContent = "<html>" +
                 "<body style='font-family: Arial; background-color: #f4f4f4; padding: 20px;'>" +
                 "<div style='background: white; padding: 20px; border-radius: 8px; text-align: center;'>" +
-
-                // LOGO (اختياري)
                 "<img src='cid:logoImage' style='width:100px; margin-bottom:20px;' />" +
+                "<h2 style='color: #333;'>🔑 Définissez votre mot de passe</h2>" +
+                "<p style='font-size:16px;'>Votre identité a été vérifiée avec succès.</p>" +
+                "<p>Cliquez ci-dessous pour choisir votre mot de passe :</p>" +
 
-                "<h2 style='color: #333;'>🔑  mot de passe</h2>" +
-                "<p style='font-size: 16px;'>Votre mot de passe est :</p>" +
-                "<h1 style='color: #007BFF; letter-spacing: 2px;'>" + mdp + "</h1>" +
-                "<p style='color: #777;'>Ne partagez ce mot de passe avec personne.</p>" +
-                "</div>" +
-                "</body>" +
-                "</html>";
+                "<a href='" + link + "' style='display:inline-block; margin-top:20px; " +
+                "padding:12px 30px; background-color:#007BFF; color:white; " +
+                "text-decoration:none; border-radius:5px; font-size:16px;'>" +
+                "Définir mon mot de passe</a>" +
+
+                "<p style='color:#aaa; margin-top:20px; font-size:12px;'>" +
+                "Ce lien expire dans 24h.</p>" +
+                "</div></body></html>";
 
         helper.setText(htmlContent, true);
-        helper.addInline(
-                "logoImage",
-                new ClassPathResource("static/logo.png"));
-
+        helper.addInline("logoImage", new ClassPathResource("static/logo.png"));
         mailSender.send(message);
-
+    }
 
     }
 
-}
+

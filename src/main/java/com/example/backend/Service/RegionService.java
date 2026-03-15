@@ -40,7 +40,7 @@ public class RegionService {
 
     public Region updateRegion(UUID id, Region regionDetails) {
         return regionRepository.findById(id).map(region -> {
-            region.setCode(regionDetails.getCode());
+
             region.setLabel(regionDetails.getLabel());
             return regionRepository.save(region);
         }).orElseThrow(() -> new ResourceNotFoundException("Region non trouvée avec l'id : " + id));

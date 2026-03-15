@@ -72,7 +72,7 @@ public class UtilisateurService {
                         .orElseThrow(() -> new ResourceNotFoundException(
                                 "Profil non trouvé avec l'id : " + user.getProfil().getId()));
                 user.setProfil(existingProfil);
-                user.setStructure(existingProfil.getStructure());
+                user.getProfil().setStructure(existingProfil.getStructure());
             }
         }
 
@@ -208,7 +208,7 @@ public class UtilisateurService {
             }
         }
 
-        if (user.getStructure() != null && user.getStructure() == Structure.S002) {
+        if (user.getProfil() != null && user.getProfil().getStructure() == Structure.S002) {
             if (user.getCentreAffaires() == null || user.getCentreAffaires().isEmpty()) {
                 throw new IllegalArgumentException("Le centre d'affaire est obligatoire pour la structure S002");
             }
@@ -239,19 +239,22 @@ public class UtilisateurService {
             if (!otpService.verifyOtp(otpInput.trim(), user.getOtp()))
                 return "Code OTP incorrect pour " + email;
 
-            String mdp = GenerateurMotDePasseService.generer();
-            user.setEnabled(true);
+            // ⬅️ ولّد token بدل password
+            String token = UUID.randomUUID().toString();
+            user.setActivationToken(token);
             user.setOtp(null);
-            user.setMotDePasse(passwordEncoder.encode(mdp));
+            // ⚠️ ما تعملش setEnabled(true) هنا — User مازال ما حطش password
             utilisateurRepository.save(user);
 
-            mdpService.sendMdp(user.getEmail(), mdp);
+            // ⬅️ ابعث لينك بدل password
+            mdpService.sendActivationLink(user.getEmail(), token);
             return "OK";
+
         } catch (org.springframework.dao.IncorrectResultSizeDataAccessException e) {
-            return "Plusieurs utilisateurs trouvés avec cet email. Veuillez contacter l'administrateur.";
+            return "Plusieurs utilisateurs trouvés avec cet email.";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Erreur lors de la vérification : " + e.getMessage();
+            return "Erreur : " + e.getMessage();
         }
     }
 
@@ -274,7 +277,7 @@ public class UtilisateurService {
                     .orElseThrow(() -> new ResourceNotFoundException("Profil not found"));
 
             user.setProfil(profil);
-            user.setStructure(profil.getStructure());
+            user.getProfil().setStructure(profil.getStructure());
 
             if (profil.getPalier() == 1) {
                 List<Palier> attachedPaliers = new ArrayList<>();
@@ -409,7 +412,7 @@ public class UtilisateurService {
                 user.getRegions().clear();
             }
 
-            if (user.getStructure() != null && user.getStructure() == Structure.S002) {
+            if (user.getProfil().getStructure() != null && user.getProfil().getStructure() == Structure.S002) {
                 if (user.getCentreAffaires() == null || user.getCentreAffaires().isEmpty()) {
                     throw new IllegalArgumentException("Le centre d'affaire est obligatoire pour la structure S002");
                 }
@@ -431,6 +434,26 @@ public class UtilisateurService {
             return "Utilisateur activé";
         } else {
             return "Utilisateur désactivé";
+        }
+    }
+    public String setPassword(String token, String password) {
+        try {
+            Utilisateur user = utilisateurRepository.findByActivationToken(token)
+                    .orElse(null);
+
+            if (user == null)
+                return "Token invalide ou expiré !";
+
+            user.setMotDePasse(passwordEncoder.encode(password));
+            user.setActivationToken(null);    // امسح التوكن
+            user.setEnabled(true);            // فعّل الـ account
+            user.setUtilisateurActive(true);  // فعّل الـ user
+            utilisateurRepository.save(user);
+
+            return "OK";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Erreur : " + e.getMessage();
         }
     }
 

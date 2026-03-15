@@ -33,7 +33,7 @@ public class CentreAffaireService {
 
     public CentreAffaire updateCentreAffaire(UUID id, CentreAffaire centreAffaireDetails) {
         return centreAffaireRepository.findById(id).map(centreAffaire -> {
-            centreAffaire.setCode(centreAffaireDetails.getCode());
+
             centreAffaire.setLabel(centreAffaireDetails.getLabel());
             return centreAffaireRepository.save(centreAffaire);
         }).orElseThrow(() -> new ResourceNotFoundException("CentreAffaire non trouvé avec l'id : " + id));

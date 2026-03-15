@@ -35,7 +35,7 @@ public class ActiviteService {
 
     public Activite updateActivite(UUID id, Activite activiteDetails) {
         return activiteRepository.findById(id).map(activite -> {
-            activite.setCode(activiteDetails.getCode());
+           
             activite.setLabel(activiteDetails.getLabel());
             return activiteRepository.save(activite);
         }).orElseThrow(() -> new ResourceNotFoundException("Activite non trouvée avec l'id : " + id));

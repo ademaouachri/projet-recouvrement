@@ -9,7 +9,7 @@ import java.util.List;
 
 @Component
 public class JwtUtil {
-    // Clé statique pour éviter de déconnecter l'utilisateur à chaque redémarrage du serveur pendant le dev
+
     private final String SECRET = "votre_cle_secrete_tres_longue_et_securisee_de_32_caracteres";
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
     private final long EXPIRATION = 86400000; // 24h
@@ -25,7 +25,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> extractPermissions(String token) {
         return getClaims(token).get("permissions", List.class);
     }

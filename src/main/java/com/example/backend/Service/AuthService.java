@@ -41,10 +41,10 @@ public class AuthService {
             if (user.getProfil().getCentreAffaire() == 1) permissions.add("PERM_CENTRE_AFFAIRE");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getStructure().name(), permissions);
+        String token = jwtUtil.generateToken(user.getEmail(), user.getProfil().getStructure().name(), permissions);
         return Map.of(
                 "token", token,
-                "structure", user.getStructure(),
+                "structure", user.getProfil().getStructure(),
                 "permissions", permissions
         );
     }

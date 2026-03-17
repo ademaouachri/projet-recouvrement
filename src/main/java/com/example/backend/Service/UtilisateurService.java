@@ -4,10 +4,12 @@ import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.*;
 
 import com.example.backend.Repository.*;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -25,16 +27,17 @@ public class UtilisateurService {
     private final CentreAffaireRepository centreAffaireRepository;
     private final MarcheRepository marcheRepository;
     private final SegmentRepository segmentRepository;
-    private final MdpService mdpService;
-    private final GenerateurMotDePasseService generateurMotDePasseService;
+    private final EmailService emailService;
+
+  ;
     private final PasswordEncoder passwordEncoder;
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository, OtpService otpService,
             ProfilRepository profilRepository, PalierRepository palierRepository, ZoneRepository zoneRepository,
             RegionRepository regionRepository, ActiviteRepository activiteRepository,
             SegmentRepository segmentRepository, CentreAffaireRepository centreAffaireRepository,
-            MarcheRepository marcheRepository, AgenceRepository agenceRepository, MdpService mdpService,
-            GenerateurMotDePasseService generateurMotDePasseService, PasswordEncoder passwordEncoder) {
+            MarcheRepository marcheRepository, AgenceRepository agenceRepository,
+            PasswordEncoder passwordEncoder, EmailService emailService) {
         this.utilisateurRepository = utilisateurRepository;
         this.profilRepository = profilRepository;
         this.otpService = otpService;
@@ -46,8 +49,8 @@ public class UtilisateurService {
         this.centreAffaireRepository = centreAffaireRepository;
         this.marcheRepository = marcheRepository;
         this.agenceRepository = agenceRepository;
-        this.mdpService = mdpService;
-        this.generateurMotDePasseService = generateurMotDePasseService;
+       this.emailService = emailService;
+
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -208,11 +211,7 @@ public class UtilisateurService {
             }
         }
 
-        if (user.getProfil() != null && user.getProfil().getStructure() == Structure.S002) {
-            if (user.getCentreAffaires() == null || user.getCentreAffaires().isEmpty()) {
-                throw new IllegalArgumentException("Le centre d'affaire est obligatoire pour la structure S002");
-            }
-        }
+
 
         try {
             String otp = otpService.generateOtp();
@@ -239,20 +238,16 @@ public class UtilisateurService {
             if (!otpService.verifyOtp(otpInput.trim(), user.getOtp()))
                 return "Code OTP incorrect pour " + email;
 
-            // ⬅️ ولّد token بدل password
             String token = UUID.randomUUID().toString();
             user.setActivationToken(token);
             user.setOtp(null);
-            // ⚠️ ما تعملش setEnabled(true) هنا — User مازال ما حطش password
+
             utilisateurRepository.save(user);
 
-            // ⬅️ ابعث لينك بدل password
-            mdpService.sendActivationLink(user.getEmail(), token);
+           emailService.sendSetPasswordEmail(user.getEmail(), token);
             return "OK";
 
-        } catch (org.springframework.dao.IncorrectResultSizeDataAccessException e) {
-            return "Plusieurs utilisateurs trouvés avec cet email.";
-        } catch (Exception e) {
+        }  catch (Exception e) {
             e.printStackTrace();
             return "Erreur : " + e.getMessage();
         }
@@ -262,7 +257,7 @@ public class UtilisateurService {
         return utilisateurRepository.findAll();
     }
 
-    public java.util.Optional<Utilisateur> getUtilisateurById(UUID id) {
+    public Optional<Utilisateur> getUtilisateurById(UUID id) {
         return utilisateurRepository.findById(id);
     }
 
@@ -410,12 +405,6 @@ public class UtilisateurService {
 
             } else {
                 user.getRegions().clear();
-            }
-
-            if (user.getProfil().getStructure() != null && user.getProfil().getStructure() == Structure.S002) {
-                if (user.getCentreAffaires() == null || user.getCentreAffaires().isEmpty()) {
-                    throw new IllegalArgumentException("Le centre d'affaire est obligatoire pour la structure S002");
-                }
             }
 
             return utilisateurRepository.save(user);

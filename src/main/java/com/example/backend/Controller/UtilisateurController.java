@@ -1,5 +1,6 @@
 package com.example.backend.Controller;
 
+import com.example.backend.DTO.SetPasswordRequest;
 import com.example.backend.Model.Utilisateur;
 import com.example.backend.Service.UtilisateurService;
 
@@ -72,9 +73,9 @@ public class UtilisateurController {
     }
 
     @PostMapping("/set-password")
-    public ResponseEntity<String> setPassword(@RequestBody Map<String, String> request) {
-        String token = request.get("token");
-        String password = request.get("password");
+    public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest request) {
+        String token = request.getToken();
+        String password = request.getPassword();
 
         if (token == null || password == null)
             return ResponseEntity.badRequest().body("Token et mot de passe requis ❌");

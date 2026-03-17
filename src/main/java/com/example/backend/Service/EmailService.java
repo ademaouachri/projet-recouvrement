@@ -53,11 +53,11 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public void sendActivationEmail(String toEmail, String token) throws MessagingException {
+    public void sendSetPasswordEmail(String toEmail, String token) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        String link = frontendUrl + "/set-password?token=" + token; // ⬅️ لينك Angular
+        String link = frontendUrl + "/set-password?token=" + token;
 
         helper.setTo(toEmail);
         helper.setSubject("🔐 Définissez votre mot de passe");

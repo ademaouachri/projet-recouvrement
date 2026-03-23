@@ -1,40 +1,41 @@
 package com.example.backend.Security;
 
+import com.example.backend.Model.Utilisateur;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value; // ✅ هذا الصح
 import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
-import java.util.List;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "votre_cle_secrete_tres_longue_et_securisee_de_32_caracteres";
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
-    private final long EXPIRATION = 86400000; // 24h
+    @Value("${app.jwt.secret}")
+    private String SECRET;
 
-    public String generateToken(String username, String structure, List<String> permissions) {
+    private Key key;
+
+    @Value("${app.jwt.expiration}")
+    private long EXPIRATION;
+
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    }
+
+    public String generateToken(Utilisateur user) {
         return Jwts.builder()
-                .setSubject(username)
-                .claim("structure", structure)
-                .claim("permissions", permissions)
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(key)
                 .compact();
     }
 
-    public List<String> extractPermissions(String token) {
-        return getClaims(token).get("permissions", List.class);
-    }
-
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return getClaims(token).getSubject();
-    }
-
-    public String extractStructure(String token) {
-        return getClaims(token).get("structure", String.class);
     }
 
     public boolean isTokenValid(String token) {
@@ -47,7 +48,8 @@ public class JwtUtil {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
+        return Jwts.parserBuilder()
+                .setSigningKey(key).build()
                 .parseClaimsJws(token).getBody();
     }
 }

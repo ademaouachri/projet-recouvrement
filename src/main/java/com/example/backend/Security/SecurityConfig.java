@@ -24,9 +24,10 @@ public class SecurityConfig {
                         .requestMatchers("/users/**").permitAll()           
                         .requestMatchers("/profils/**").permitAll()
                         .requestMatchers("/paliers/**").permitAll()          // 2️⃣
-                        .requestMatchers("/marches/**").hasRole("S001")
-                        .requestMatchers("regions/**").hasRole("S002")// 3️⃣
-                        .anyRequest().authenticated()                        // 4️⃣
+                        .requestMatchers("/marches/**").permitAll()
+                        .requestMatchers("regions/**").permitAll()
+                        .requestMatchers("/centres-affaire/**").permitAll()// 3️⃣
+                        .anyRequest().permitAll()                     // 4️⃣
                 )
 
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

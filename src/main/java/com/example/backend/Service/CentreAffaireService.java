@@ -20,6 +20,16 @@ public class CentreAffaireService {
     }
 
     public CentreAffaire createCentreAffaire(CentreAffaire centreAffaire) {
+
+        if (centreAffaireRepository.existsByCode(centreAffaire.getCode())) {
+            throw new IllegalArgumentException("Un centre d'affaire avec ce code existe déjà: " + centreAffaire.getCode());
+        }
+
+
+        if (centreAffaireRepository.existsByLabel(centreAffaire.getLabel())) {
+            throw new IllegalArgumentException("Un centre d'affaire avec ce libellé existe déjà : " + centreAffaire.getLabel());
+        }
+
         return centreAffaireRepository.save(centreAffaire);
     }
 
@@ -36,10 +46,14 @@ public class CentreAffaireService {
 
             centreAffaire.setLabel(centreAffaireDetails.getLabel());
             return centreAffaireRepository.save(centreAffaire);
-        }).orElseThrow(() -> new ResourceNotFoundException("CentreAffaire non trouvé avec l'id : " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Centre d'affaire introuvable avec l'ID : " + id));
     }
 
     public void deleteCentreAffaire(UUID id) {
+
+        if (!centreAffaireRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Impossible de supprimer : Centre d'affaire introuvable avec l'ID " + id);
+        }
         centreAffaireRepository.deleteById(id);
     }
 }

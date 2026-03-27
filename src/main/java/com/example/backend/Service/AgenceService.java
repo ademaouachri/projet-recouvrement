@@ -23,13 +23,23 @@ public class AgenceService {
     }
 
     public Agence createAgence(Agence agence) {
+
+        if (agenceRepository.existsByCode(agence.getCode())) {
+            throw new IllegalArgumentException("Une agence avec ce code existe déjà : " + agence.getCode());
+        }
+
+
+        if (agenceRepository.existsByLabel(agence.getLabel())) {
+            throw new IllegalArgumentException("Une agence avec ce libellé existe déjà : " + agence.getLabel());
+        }
+
         if (agence.getZone() == null || agence.getZone().getId() == null) {
-            throw new ResourceNotFoundException("Zone must be provided with a valid ID");
+            throw new ResourceNotFoundException("La zone doit être fournie avec un ID valide");
         }
         else {
             UUID zoneId = agence.getZone().getId();
             Zone zone = zoneRepository.findById(zoneId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + zoneId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Zone introuvable avec l'ID: " + zoneId));
             agence.setZone(zone);
             return agenceRepository.save(agence);
         }
@@ -51,7 +61,7 @@ public class AgenceService {
 
             UUID zoneId = agenceDetails.getZone().getId();
             Zone zone = zoneRepository.findById(zoneId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Zone not found with ID: " + zoneId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Zone introuvable avec l'ID:: " + zoneId));
             agenceDetails.setZone(zone);
             agence.setZone(agenceDetails.getZone());
 

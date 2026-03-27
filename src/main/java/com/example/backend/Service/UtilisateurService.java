@@ -56,17 +56,11 @@ public class UtilisateurService {
 
 
     public void registerUser(Utilisateur user) {
-        if (user.getMatricule() == null || user.getMatricule().trim().isEmpty()) {
-            throw new IllegalArgumentException("Le matricule est obligatoire !");
+        if (utilisateurRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà");
         }
-        if (utilisateurRepository.existsByMatricule(user.getMatricule().trim())) {
-            throw new IllegalArgumentException("Le matricule est déjà utilisé !");
-        }
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("L'email est obligatoire !");
-        }
-        if (utilisateurRepository.existsByEmail(user.getEmail().trim())) {
-            throw new IllegalArgumentException("L'email est déjà utilisé !");
+        if (utilisateurRepository.existsByMatricule(user.getMatricule())) {
+            throw new IllegalArgumentException("Un utilisateur avec ce matricule existe déjà");
         }
 
         if (user.getProfil() != null) {
@@ -241,6 +235,7 @@ public class UtilisateurService {
             String token = UUID.randomUUID().toString();
             user.setActivationToken(token);
             user.setOtp(null);
+            user.setEnabled(true);
 
             utilisateurRepository.save(user);
 

@@ -21,7 +21,12 @@ public class ActiviteService {
     }
 
     public Activite createActivite(Activite activite) {
-
+        if (activiteRepository.existsByCode(activite.getCode())) {
+            throw new IllegalArgumentException("Ce code d'activité existe déjà");
+        }
+        if (activiteRepository.existsByLabel(activite.getLabel())) {
+            throw new IllegalArgumentException("Une activité avec ce libellé existe déjà : " + activite.getLabel());
+        }
         return activiteRepository.save(activite);
     }
 

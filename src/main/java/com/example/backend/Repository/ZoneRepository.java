@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface ZoneRepository extends JpaRepository<Zone, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

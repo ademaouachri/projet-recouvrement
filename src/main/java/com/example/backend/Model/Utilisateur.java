@@ -7,8 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -52,43 +55,52 @@ public class Utilisateur {
         @Column(name = "utilisateur_active")
         private Boolean utilisateurActive = false;
 
-        @ManyToOne(cascade = CascadeType.ALL)
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+        @ManyToOne
         @JoinColumn(name = "profil_id")
         @JsonIgnoreProperties("utilisateurs")
         private Profil profil;
 
-        @ManyToMany(cascade = CascadeType.ALL)
+        @ManyToMany
         @JoinTable(name = "utilisateur_palier", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "palier_id"))
-        @JsonIgnoreProperties("utilisateurs")
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<Palier> paliers = new ArrayList<>();
-
         @ManyToMany
         @JoinTable(name = "utilisateur_zone", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "zone_id"))
-        @JsonIgnoreProperties("utilisateurs")
+        @OnDelete(action = OnDeleteAction.CASCADE)
+
         private List<Zone> zones = new ArrayList<>();
 
         @ManyToMany
         @JoinTable(name = "utilisateur_region", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "region_id"))
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<Region> regions = new ArrayList<>();
 
         @ManyToMany
         @JoinTable(name = "utilisateur_segment", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "segment_id"))
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<Segment> segments = new ArrayList<>();
 
         @ManyToMany
         @JoinTable(name = "utilisateur_marche", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "marche_id"))
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<Marche> marches = new ArrayList<>();
 
         @ManyToMany
         @JoinTable(name = "utilisateur_centreAffaire", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "centreAffaire_id"))
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<CentreAffaire> centreAffaires = new ArrayList<>();
 
         @ManyToMany
         @JoinTable(name = "utilisateur_activite", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "activite_id"))
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<Activite> activites = new ArrayList<>();
 
         @ManyToMany
         @JoinTable(name = "utilisateur_agence", joinColumns = @JoinColumn(name = "utilisateur_id"), inverseJoinColumns = @JoinColumn(name = "agence_id"))
+        @OnDelete(action = OnDeleteAction.CASCADE)
         private List<Agence> agences = new ArrayList<>();
 
 

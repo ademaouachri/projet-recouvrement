@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface MarcheRepository extends JpaRepository<Marche, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

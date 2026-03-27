@@ -16,15 +16,26 @@ import java.util.UUID;
 public class RegionService {
 
     private final RegionRepository regionRepository;
-    private final ZoneRepository zoneRepository;
 
-    public RegionService(RegionRepository regionRepository, ZoneRepository zoneRepository) {
 
-        this.zoneRepository = zoneRepository;
+    public RegionService(RegionRepository regionRepository) {
+
+
         this.regionRepository = regionRepository;
     }
 
     public Region createRegion(Region region) {
+        if (regionRepository.existsByCode(region.getCode())) {
+            throw new IllegalArgumentException("Une région avec ce code existe déjà : " + region.getCode());
+        }
+
+
+        if (regionRepository.existsByLabel(region.getLabel())) {
+            throw new IllegalArgumentException("Une région avec ce libellé existe déjà : " + region.getLabel());
+        }
+
+
+
         return regionRepository.save(region);
     }
 
@@ -47,6 +58,9 @@ public class RegionService {
     }
 
     public void deleteRegion(UUID id) {
+        if (!regionRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Impossible de supprimer : Région introuvable avec l'ID : " + id);
+        }
         regionRepository.deleteById(id);
     }
 }

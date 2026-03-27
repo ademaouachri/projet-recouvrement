@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface RegionRepository extends JpaRepository<Region, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

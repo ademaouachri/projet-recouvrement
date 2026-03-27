@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface CentreAffaireRepository extends JpaRepository<CentreAffaire, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

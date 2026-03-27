@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface ActiviteRepository extends JpaRepository<Activite, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

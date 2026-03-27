@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface PalierRepository extends JpaRepository<Palier, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

@@ -39,6 +39,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
+        SecurityContextHolder.clearContext();
         return ResponseEntity.ok("Déconnexion réussie ✅");
+
     }
 }

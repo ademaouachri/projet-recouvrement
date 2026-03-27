@@ -2,6 +2,7 @@ package com.example.backend.Service;
 
 import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.Marche;
+import com.example.backend.Model.Palier;
 import com.example.backend.Model.Segment;
 import com.example.backend.Repository.MarcheRepository;
 
@@ -21,6 +22,14 @@ public class MarcheService {
     }
 
     public Marche createMarche(Marche marche) {
+        if (marcheRepository.existsByCode(marche.getCode())) {
+            throw new IllegalArgumentException("Un marché avec ce code existe déjà : " + marche.getCode());
+        }
+
+
+        if (marcheRepository.existsByLabel(marche.getLabel())) {
+            throw new IllegalArgumentException("Un marché avec ce libellé existe déjà : " + marche.getLabel());
+        }
         return marcheRepository.save(marche);
     }
 
@@ -41,6 +50,10 @@ public class MarcheService {
     }
 
     public void deleteMarche(UUID id) {
+
+        if (!marcheRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Impossible de supprimer : Marché introuvable avec l'ID : " + id);
+        }
         marcheRepository.deleteById(id);
     }
 }

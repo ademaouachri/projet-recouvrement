@@ -1,6 +1,7 @@
 package com.example.backend.Controller;
 
 import com.example.backend.Model.Zone;
+import com.example.backend.Repository.ZoneRepository;
 import com.example.backend.Service.ZoneService;
 
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,11 @@ import java.util.UUID;
 public class ZoneController {
 
     private final ZoneService zoneService;
+    private final ZoneRepository zoneRepository;
 
-    public ZoneController(ZoneService zoneService) {
+    public ZoneController(ZoneService zoneService , ZoneRepository zoneRepository) {
         this.zoneService = zoneService;
+        this.zoneRepository=zoneRepository;
     }
 
     @PostMapping

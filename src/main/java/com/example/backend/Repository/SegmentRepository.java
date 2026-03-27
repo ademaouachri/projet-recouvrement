@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface SegmentRepository extends JpaRepository<Segment, UUID> {
+    boolean existsByCode(String code);
+    boolean existsByLabel(String label);
 }

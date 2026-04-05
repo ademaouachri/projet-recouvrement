@@ -12,8 +12,11 @@ import java.util.List;
 //
 public class ParameterRestController {
 
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
+
+    public ParameterRestController(ParameterService parameterService) {
+        this.parameterService = parameterService;
+    }
 
     @GetMapping
     public List<Parameter> getAll() {
@@ -21,7 +24,7 @@ public class ParameterRestController {
     }
 
     @PostMapping("/update")
-    public Parameter update(@RequestBody Parameter parameter) {
+    public Parameter update(@RequestBody Parameter parameter)      {
         return parameterService.updateParam(parameter);
     }
 }

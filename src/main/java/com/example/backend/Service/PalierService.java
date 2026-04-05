@@ -1,16 +1,12 @@
 package com.example.backend.Service;
 
-import com.example.backend.DTO.PalierDto;
 import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.Palier;
-import com.example.backend.Model.Region;
-import com.example.backend.Model.Utilisateur;
 import com.example.backend.Repository.PalierRepository;
 
 import com.example.backend.Repository.UtilisateurRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

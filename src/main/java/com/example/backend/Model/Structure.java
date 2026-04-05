@@ -5,5 +5,6 @@ public enum Structure {
         S002,
         S003,
         S004,
+        Direction,
 
 }

@@ -1,6 +1,5 @@
 package com.example.backend.Controller;
 
-import com.example.backend.DTO.PalierDto;
 import com.example.backend.Model.Palier;
 import com.example.backend.Service.PalierService;
 

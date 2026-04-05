@@ -14,7 +14,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final ParameterService parameterService; // ✅ زيد الـ Service هنا
 
-    // ✅ Injecti الـ ParameterService في الـ Constructor
+
     public EmailService(JavaMailSender mailSender, ParameterService parameterService) {
         this.mailSender = mailSender;
         this.parameterService = parameterService;

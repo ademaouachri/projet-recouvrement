@@ -4,27 +4,26 @@ import com.example.backend.Model.Utilisateur;
 import com.example.backend.Repository.UtilisateurRepository;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.util.List;
 
 @Component
-
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UtilisateurRepository utilisateurRepository;
 
-
     public JwtFilter(JwtUtil jwtUtil, UtilisateurRepository utilisateurRepository) {
         this.jwtUtil = jwtUtil;
         this.utilisateurRepository = utilisateurRepository;
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -42,7 +41,9 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             String email = jwtUtil.extractEmail(token);
-            Utilisateur user = utilisateurRepository.findByEmail(email);
+
+            // ← بدلنا findByEmail بـ findByEmailWithCollections
+            Utilisateur user = utilisateurRepository.findByEmailWithCollections(email);
 
             if (user == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -50,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            if ( !user.getUtilisateurActive()) {
+            if (!user.getUtilisateurActive()) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().write("Compte non activé ❌");
                 return;

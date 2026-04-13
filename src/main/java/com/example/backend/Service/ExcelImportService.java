@@ -53,6 +53,8 @@ public class ExcelImportService {
                     String segment = getCellValueAsString(row.getCell(6));
                     String zone = getCellValueAsString(row.getCell(7));
                     String agency = getCellValueAsString(row.getCell(1));
+                    String centres_affaire= getCellValueAsString(row.getCell(2));
+
 
                     // --- 2. الـ Validation الصارم (الإجباري) ---
                     List<String> missing = new ArrayList<>();
@@ -65,6 +67,13 @@ public class ExcelImportService {
                     if (structure.isEmpty()) missing.add("STRUCTURE");
                     if (activity.isEmpty()) missing.add("ACTIVITY_CODE");
                     if (agency.isEmpty()) missing.add("AGENCY_CODE");
+                    if (centres_affaire.isEmpty()) missing.add("CENTRES_AFFARE");
+                    if (marche.isEmpty()) missing.add("MARCHE");
+                    if (segment.isEmpty()) missing.add("SEGMENT");
+                    if (zone.isEmpty()) missing.add("ZONE");
+                    if (region.isEmpty()) missing.add("REGION");
+
+
 
                     if (!missing.isEmpty()) {
                         saveError("Validation", "Champs manquants: " + String.join(", ", missing), rowNum, result);

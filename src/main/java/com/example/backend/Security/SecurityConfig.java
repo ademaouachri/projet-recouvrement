@@ -32,8 +32,8 @@ public class SecurityConfig {
                         .requestMatchers("/paliers/**").permitAll()            // 2️⃣
                         .requestMatchers("/marches/**").permitAll()
                         .requestMatchers("regions/**").permitAll()
-                        .requestMatchers("/centres-affaire/**").permitAll()   // 3️⃣
-                        .anyRequest().permitAll()                    // 4️⃣
+                        .requestMatchers("/centres-affaire/**").permitAll()  // 3️⃣
+                        .anyRequest().permitAll()                   // 4️⃣
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

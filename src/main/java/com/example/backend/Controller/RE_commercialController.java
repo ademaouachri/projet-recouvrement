@@ -3,6 +3,7 @@ package com.example.backend.Controller;
 import com.example.backend.Model.Client;
 import com.example.backend.Model.Utilisateur;
 import com.example.backend.Service.RE_commercialService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,15 @@ public class RE_commercialController {
 
     @GetMapping("/clients")
     public ResponseEntity<List<Client>> getMyClients(
-            @AuthenticationPrincipal Utilisateur utilisateur) {
+            @AuthenticationPrincipal Utilisateur utilisateur,
+            @RequestParam(defaultValue = "createdAt") String sortBy,   // ← جديد
+            @RequestParam(defaultValue = "desc") String sortDir) {     // ← جديد
 
-        List<Client> clients = reCommercialService.getClientsForUser(utilisateur);
-        return ResponseEntity.ok(clients);
+        if (utilisateur == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        return ResponseEntity.ok(
+                reCommercialService.getClientsForUser(utilisateur, sortBy, sortDir)
+        );
     }
 }

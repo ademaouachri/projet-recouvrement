@@ -1,7 +1,10 @@
 package com.example.backend.Service;
 
+import com.example.backend.DTO.DashboardStats;
+import com.example.backend.DTO.MonthlyEvolutionDTO;
 import com.example.backend.Model.*;
 import com.example.backend.Repository.ClientRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +15,10 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class RE_commercialService {
+
+    private final ClientRepository clientRepository;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "totalImpayeAmount", "totalCommitment", "totalAuthorization",
@@ -20,18 +26,50 @@ public class RE_commercialService {
             "createdAt", "updatedAt", "totalDepassement", "totalSdbAmount"
     );
 
-    private final ClientRepository clientRepository;
+    /**
+     * 1. ميثود الـ Dashboard (الجديدة)
+     * تجلب الأرقام والـ Chart مع احترام صلاحيات المستخدم
+     */
+    @Transactional(readOnly = true)
+    public DashboardStats getDashboardData(Utilisateur utilisateur, String structure, LocalDateTime startDate) {
 
-    public RE_commercialService(ClientRepository clientRepository) {
-        this.clientRepository = clientRepository;
+        // استخراج الصلاحيات (نفس منطق الجدول)
+        List<String> agencyCodes = extractAgencyCodes(utilisateur);
+        List<String> zoneCodes = extractZoneCodes(utilisateur);
+        List<String> regionCodes = extractRegionCodes(utilisateur);
+
+        // جلب الأرقام الكبيرة من الـ Repository
+        DashboardStats stats = clientRepository.getDashboardGlobalStats(
+                agencyCodes, zoneCodes, regionCodes, null, null, null, null,
+                null, null, structure, null, null, null, startDate
+        );
+
+        // جلب بيانات الـ Charts (التطور الشهري)
+        List<MonthlyEvolutionDTO> monthlyStats = clientRepository.getDashboardMonthlyStats(
+                agencyCodes, zoneCodes, regionCodes, structure
+        );
+
+        // دمج النتائج
+        if (stats != null) {
+            stats.setMonthlyEvolution(monthlyStats);
+        } else {
+            stats = new DashboardStats();
+            stats.setMonthlyEvolution(monthlyStats);
+        }
+
+        return stats;
     }
 
+    /**
+     * 2. ميثود قائمة العملاء (القديمة)
+     * مع إضافة الفلاتر الجديدة (structure, fullName)
+     */
     @Transactional(readOnly = true)
     public List<Client> getClientsForUser(Utilisateur utilisateur,
                                           String postalCode,
                                           String dossierType,
-                                          String structure,   // بارامتر جديد
-                                          String fullName,    // بارامتر جديد
+                                          String structure,
+                                          String fullName,
                                           String clientGroup,
                                           String createdBy,
                                           LocalDateTime startDate,
@@ -41,70 +79,53 @@ public class RE_commercialService {
         Profil profil = utilisateur.getProfil();
         if (profil == null) return List.of();
 
-        // 1. تحضير الـ Perimetre
-        List<String> agencyCodes = null;
-        List<String> zoneCodes = null;
-        List<String> regionCodes = null;
-        List<String> activityCodes = null;
-        List<String> marcheCodes = null;
-        List<String> segmentCodes = null;
-        List<String> businessCenterCodes = null;
+        // تحضير الـ Perimetre (نفس المنطق)
+        List<String> agencyCodes = extractAgencyCodes(utilisateur);
+        List<String> zoneCodes = extractZoneCodes(utilisateur);
+        List<String> regionCodes = extractRegionCodes(utilisateur);
 
-        if (profil.getAgence() == 1 && utilisateur.getAgences() != null) {
-            agencyCodes = new ArrayList<>();
-            for (Agence a : utilisateur.getAgences()) agencyCodes.add(a.getCode());
-        }
-        if (profil.getZone() == 1 && utilisateur.getZones() != null) {
-            zoneCodes = new ArrayList<>();
-            for (Zone z : utilisateur.getZones()) zoneCodes.add(z.getCode());
-        }
-        if (profil.getRegion() == 1 && utilisateur.getRegions() != null) {
-            regionCodes = new ArrayList<>();
-            for (Region r : utilisateur.getRegions()) regionCodes.add(r.getCode());
-        }
-        if (profil.getActivite() == 1 && utilisateur.getActivites() != null) {
-            activityCodes = new ArrayList<>();
-            for (Activite a : utilisateur.getActivites()) activityCodes.add(a.getCode());
-        }
-        if (profil.getMarche() == 1 && utilisateur.getMarches() != null) {
-            marcheCodes = new ArrayList<>();
-            for (Marche m : utilisateur.getMarches()) marcheCodes.add(m.getCode());
-        }
-        if (profil.getSegment() == 1 && utilisateur.getSegments() != null) {
-            segmentCodes = new ArrayList<>();
-            for (Segment s : utilisateur.getSegments()) segmentCodes.add(s.getCode());
-        }
-        if (profil.getCentreAffaire() == 1 && utilisateur.getCentreAffaires() != null) {
-            businessCenterCodes = new ArrayList<>();
-            for (CentreAffaire ca : utilisateur.getCentreAffaires()) businessCenterCodes.add(ca.getCode());
-        }
+        // استخراج بقية الصلاحيات للجدول فقط
+        List<String> activityCodes = (profil.getActivite() == 1 && utilisateur.getActivites() != null) ?
+                utilisateur.getActivites().stream().map(Activite::getCode).toList() : null;
+        List<String> marcheCodes = (profil.getMarche() == 1 && utilisateur.getMarches() != null) ?
+                utilisateur.getMarches().stream().map(Marche::getCode).toList() : null;
+        List<String> segmentCodes = (profil.getSegment() == 1 && utilisateur.getSegments() != null) ?
+                utilisateur.getSegments().stream().map(Segment::getCode).toList() : null;
+        List<String> businessCenterCodes = (profil.getCentreAffaire() == 1 && utilisateur.getCentreAffaires() != null) ?
+                utilisateur.getCentreAffaires().stream().map(CentreAffaire::getCode).toList() : null;
 
-        // 2. تحضير الـ Sort
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
             sortBy = "totalImpayeAmount";
         }
 
-        Sort sort = "asc".equalsIgnoreCase(sortDir)
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+        Sort sort = "asc".equalsIgnoreCase(sortDir) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
-        // 3. نبعثوا الـ 15 Parameter (زدنا structure و fullName)
         return clientRepository.findByPerimetre(
-                agencyCodes,
-                zoneCodes,
-                regionCodes,
-                activityCodes,
-                marcheCodes,
-                segmentCodes,
-                businessCenterCodes,
-                postalCode,
-                dossierType,
-                structure,  // بعثنا الـ structure للـ Repository
-                fullName,   // بعثنا الـ fullName للـ Repository
-                clientGroup,
-                createdBy,
-                startDate,
-                sort
+                agencyCodes, zoneCodes, regionCodes, activityCodes, marcheCodes, segmentCodes, businessCenterCodes,
+                postalCode, dossierType, structure, fullName, clientGroup, createdBy, startDate, sort
         );
+    }
+
+    // --- ميثودات مساعدة (Helper Methods) ---
+
+    private List<String> extractAgencyCodes(Utilisateur u) {
+        if (u.getProfil().getAgence() == 1 && u.getAgences() != null) {
+            return u.getAgences().stream().map(Agence::getCode).toList();
+        }
+        return null;
+    }
+
+    private List<String> extractZoneCodes(Utilisateur u) {
+        if (u.getProfil().getZone() == 1 && u.getZones() != null) {
+            return u.getZones().stream().map(Zone::getCode).toList();
+        }
+        return null;
+    }
+
+    private List<String> extractRegionCodes(Utilisateur u) {
+        if (u.getProfil().getRegion() == 1 && u.getRegions() != null) {
+            return u.getRegions().stream().map(Region::getCode).toList();
+        }
+        return null;
     }
 }

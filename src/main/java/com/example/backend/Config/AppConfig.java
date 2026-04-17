@@ -30,6 +30,7 @@ public class AppConfig {
             initParamIfAbsent("jwtExpiration", "86400000");
             initParamIfAbsent("cleanupHoursLimit", "24");
             initParamIfAbsent("cleanupCron", "0 * * * * *");
+            initParamIfAbsent("frontendUrl", "http://localhost:4200");
             System.out.println("✅ [AppConfig] Paramètres initialisés.");
         };
     }

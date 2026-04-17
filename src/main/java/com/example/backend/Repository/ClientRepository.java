@@ -3,17 +3,19 @@ package com.example.backend.Repository;
 import com.example.backend.Model.Client;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, String> {
+
     Optional<Client> findByCin(String cin);
+
     @Query("""
         SELECT c FROM Client c
         WHERE (:agencyCodes IS NULL OR c.agencyCode IN :agencyCodes)
@@ -23,6 +25,13 @@ public interface ClientRepository extends JpaRepository<Client, String> {
         AND (:marcheCodes IS NULL OR c.marchetCode IN :marcheCodes)
         AND (:segmentCodes IS NULL OR c.segmentCode IN :segmentCodes)
         AND (:businessCenterCodes IS NULL OR c.businessCenterCode IN :businessCenterCodes)
+        AND (:postalCode IS NULL OR c.postalCode = :postalCode)
+        AND (:dossierType IS NULL OR TRIM(UPPER(c.dossierType)) = TRIM(UPPER(:dossierType)))
+        AND (:structure IS NULL OR TRIM(UPPER(c.structure)) = TRIM(UPPER(:structure)))
+        AND (:fullName IS NULL OR UPPER(c.fullName) LIKE UPPER(CONCAT('%', :fullName, '%')))
+        AND (:clientGroup IS NULL OR c.clientGroup = :clientGroup)
+        AND (:createdBy IS NULL OR c.createdBy = :createdBy)
+        AND (cast(:startDate as timestamp) IS NULL OR c.createdAt >= :startDate)
     """)
     List<Client> findByPerimetre(
             @Param("agencyCodes") List<String> agencyCodes,
@@ -32,6 +41,13 @@ public interface ClientRepository extends JpaRepository<Client, String> {
             @Param("marcheCodes") List<String> marcheCodes,
             @Param("segmentCodes") List<String> segmentCodes,
             @Param("businessCenterCodes") List<String> businessCenterCodes,
+            @Param("postalCode") String postalCode,
+            @Param("dossierType") String dossierType,
+            @Param("structure") String structure,
+            @Param("fullName") String fullName,
+            @Param("clientGroup") String clientGroup,
+            @Param("createdBy") String createdBy,
+            @Param("startDate") LocalDateTime startDate,
             Sort sort
     );
 }

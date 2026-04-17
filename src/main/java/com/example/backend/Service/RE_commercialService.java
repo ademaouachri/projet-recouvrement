@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -13,11 +14,10 @@ import java.util.Set;
 @Service
 public class RE_commercialService {
 
-    // حماية من injection — كان حد يبعث حقل غريب نرجعو للـ default
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "totalImpayeAmount", "totalCommitment", "totalAuthorization",
             "outstanding", "totalDaysImpaye", "totalDaysSdb",
-            "createdAt", "updatedAt", "birthDate"
+            "createdAt", "updatedAt", "totalDepassement", "totalSdbAmount"
     );
 
     private final ClientRepository clientRepository;
@@ -26,13 +26,22 @@ public class RE_commercialService {
         this.clientRepository = clientRepository;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Client> getClientsForUser(Utilisateur utilisateur,
-                                          String sortBy, String sortDir) {
+                                          String postalCode,
+                                          String dossierType,
+                                          String structure,   // بارامتر جديد
+                                          String fullName,    // بارامتر جديد
+                                          String clientGroup,
+                                          String createdBy,
+                                          LocalDateTime startDate,
+                                          String sortBy,
+                                          String sortDir) {
+
         Profil profil = utilisateur.getProfil();
         if (profil == null) return List.of();
 
-        // ── Perimetre (نفس الكود القديم بالحرف) ──────────────────────
+        // 1. تحضير الـ Perimetre
         List<String> agencyCodes = null;
         List<String> zoneCodes = null;
         List<String> regionCodes = null;
@@ -70,23 +79,32 @@ public class RE_commercialService {
             for (CentreAffaire ca : utilisateur.getCentreAffaires()) businessCenterCodes.add(ca.getCode());
         }
 
-        // ── Sort ──────────────────────────────────────────────────────
-        Sort sort;
-
+        // 2. تحضير الـ Sort
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
-            sortBy = "createdAt";
+            sortBy = "totalImpayeAmount";
         }
 
-        if ("asc".equalsIgnoreCase(sortDir)) {
-            sort = Sort.by(Sort.Direction.ASC, sortBy);
-        } else {
-            sort = Sort.by(Sort.Direction.DESC, sortBy);
-        }
-        // ── نفس الـ call القديم + sort ────────────────────────────────
+        Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        // 3. نبعثوا الـ 15 Parameter (زدنا structure و fullName)
         return clientRepository.findByPerimetre(
-                agencyCodes, zoneCodes, regionCodes,
-                activityCodes, marcheCodes, segmentCodes,
-                businessCenterCodes, sort
+                agencyCodes,
+                zoneCodes,
+                regionCodes,
+                activityCodes,
+                marcheCodes,
+                segmentCodes,
+                businessCenterCodes,
+                postalCode,
+                dossierType,
+                structure,  // بعثنا الـ structure للـ Repository
+                fullName,   // بعثنا الـ fullName للـ Repository
+                clientGroup,
+                createdBy,
+                startDate,
+                sort
         );
     }
 }

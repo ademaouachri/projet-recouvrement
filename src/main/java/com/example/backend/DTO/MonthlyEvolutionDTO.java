@@ -12,7 +12,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MonthlyEvolutionDTO {
+    private Integer year;
     private Integer month;
+
     private BigDecimal impaye;
     private BigDecimal sdb;
     private BigDecimal engagement;

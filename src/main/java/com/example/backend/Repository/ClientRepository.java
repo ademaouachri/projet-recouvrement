@@ -18,7 +18,7 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     Optional<Client> findByCin(String cin);
 
-    // 1. ميثود الـ Dashboard الرئيسية
+    // 1. ميثود الـ Dashboard الرئيسية - مع المسار الكامل للـ DTO
     @Query("""
         SELECT new com.example.backend.DTO.DashboardStats(
             COUNT(c), 
@@ -63,9 +63,10 @@ public interface ClientRepository extends JpaRepository<Client, String> {
             @Param("startDate") LocalDateTime startDate
     );
 
-    // 2. ميثود الـ Charts (التطور الشهري)
+    // 2. ميثود الـ Charts - مع المسار الكامل وإضافة السنة
     @Query("""
         SELECT new com.example.backend.DTO.MonthlyEvolutionDTO(
+            YEAR(c.createdAt),
             MONTH(c.createdAt), 
             SUM(c.totalImpayeAmount), 
             SUM(c.totalSdbAmount), 
@@ -73,13 +74,12 @@ public interface ClientRepository extends JpaRepository<Client, String> {
             SUM(CASE WHEN UPPER(c.dossierType) = 'CLOTURE' THEN c.totalCommitment ELSE 0.0 END)
         )
         FROM Client c
-        WHERE YEAR(c.createdAt) = YEAR(CURRENT_DATE)
-        AND (:agencyCodes IS NULL OR c.agencyCode IN :agencyCodes)
+        WHERE (:agencyCodes IS NULL OR c.agencyCode IN :agencyCodes)
         AND (:zoneCodes IS NULL OR c.zoneCode IN :zoneCodes)
         AND (:regionCodes IS NULL OR c.regionCode IN :regionCodes)
         AND (:structure IS NULL OR TRIM(UPPER(c.structure)) = TRIM(UPPER(:structure)))
-        GROUP BY MONTH(c.createdAt)
-        ORDER BY MONTH(c.createdAt) ASC
+        GROUP BY YEAR(c.createdAt), MONTH(c.createdAt)
+        ORDER BY YEAR(c.createdAt) ASC, MONTH(c.createdAt) ASC
     """)
     List<MonthlyEvolutionDTO> getDashboardMonthlyStats(
             @Param("agencyCodes") List<String> agencyCodes,
@@ -88,7 +88,7 @@ public interface ClientRepository extends JpaRepository<Client, String> {
             @Param("structure") String structure
     );
 
-    // 3. ميثود البحث بالفلترة (قائمة العملاء)
+    // 3. ميثود البحث بالفلترة
     @Query("""
         SELECT c FROM Client c
         WHERE (:agencyCodes IS NULL OR c.agencyCode IN :agencyCodes)

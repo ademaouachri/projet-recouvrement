@@ -85,7 +85,6 @@ public class Client {
     @Column(name = "CITY")
     private String city;
 
-
     @Column(name = "TOTAL_DAYS_IMPAYE")
     private Long totalDaysImpaye;
 
@@ -113,7 +112,7 @@ public class Client {
     @Column(name = "SECTOR_COMMITMENT", precision = 20, scale = 3)
     private BigDecimal sectorCommitment;
 
-    // ====== الأعمدة النصية ======
+    // ====== الأعمدة النصية والحالة ======
     @Column(name = "FOLLOW_UP_TYPE")
     private String followUpType;
 
@@ -147,22 +146,25 @@ public class Client {
     @Column(name = "MOTIF_PARTICULAR")
     private String motifParticular;
 
-    // ====== الأعمدة التلقائية ======
-    @Column(name = "CREATED_AT", nullable = false, updatable = false)
+    // ====== أعمدة التتبع (Audit Fields) - تم إصلاحها هنا ======
+    @Column(name = "CREATED_AT", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "UPDATED_AT", nullable = false)
+    @Column(name = "UPDATED_AT")
     private LocalDateTime updatedAt;
 
     @Column(name = "CREATED_BY")
-    private String createdBy;
+    private String createdBy; // الحقل الذي كان ينقصك في الـ Repository Query
 
     @Column(name = "UPDATED_BY")
     private String updatedBy;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        // حط التاريخ توا "فقط" إذا كان فارغ (ما جاش من الإكسل)
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
         this.updatedAt = LocalDateTime.now();
     }
 

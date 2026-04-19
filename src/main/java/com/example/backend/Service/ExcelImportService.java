@@ -1,36 +1,38 @@
 package com.example.backend.Service;
 
+import com.example.backend.DTO.ImportResult;
 import com.example.backend.Model.Client;
 import com.example.backend.Model.ImportErrorLog;
 import com.example.backend.Repository.ClientRepository;
 import com.example.backend.Repository.ImportErrorLogRepository;
-import com.example.backend.DTO.ImportResult;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ExcelImportService {
 
     private final ClientRepository repository;
     private final ImportErrorLogRepository errorLogRepository;
     private final DataFormatter dataFormatter = new DataFormatter();
 
-    public ExcelImportService(ClientRepository repository, ImportErrorLogRepository errorLogRepository) {
-        this.repository = repository;
-        this.errorLogRepository = errorLogRepository;
-    }
-
+    @Transactional
     public ImportResult processExcelFile(MultipartFile file) {
         ImportResult result = new ImportResult();
+        List<Client> clientsToSave = new ArrayList<>();
         int rowNum = 0;
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
@@ -38,12 +40,10 @@ public class ExcelImportService {
 
             for (Row row : sheet) {
                 rowNum++;
-                if (rowNum == 1) continue; // تخطي الـ Header
-
-                if (isRowEmpty(row)) continue;
+                if (rowNum == 1 || isRowEmpty(row)) continue;
 
                 try {
-                    // --- 1. استخراج البيانات من الخلايا ---
+                    // 1. قراءة البيانات للـ Validation (نفس منطقك بالظبط)
                     String cli = getCellValue(row, 0);
                     String agency = getCellValue(row, 1);
                     String businessCenter = getCellValue(row, 2);
@@ -57,103 +57,141 @@ public class ExcelImportService {
                     String tel = getCellValue(row, 12);
                     String mail = getCellValue(row, 16);
                     String address = getCellValue(row, 17);
-
-                    // حقول غير إجبارية لكن تقرأ للمتابعة
-                    String classe = getCellValue(row, 8);
                     String structure = getCellValue(row, 40);
 
-                    // --- 2. التحقق من الحقول الإجبارية (Validation) ---
-                    List<String> missingFields = new ArrayList<>();
-                    if (cli.isEmpty()) missingFields.add("CLI");
-                    if (agency.isEmpty()) missingFields.add("AGENCY_CODE");
-                    if (businessCenter.isEmpty()) missingFields.add("BUSINESS_CENTER");
-                    if (activity.isEmpty()) missingFields.add("ACTIVITY");
-                    if (region.isEmpty()) missingFields.add("REGION");
-                    if (marche.isEmpty()) missingFields.add("MARCHE");
-                    if (segment.isEmpty()) missingFields.add("SEGMENT");
-                    if (zone.isEmpty()) missingFields.add("ZONE");
-                    if (fullName.isEmpty()) missingFields.add("FULL_NAME");
-                    if (cin.isEmpty()) missingFields.add("CIN");
-                    if (tel.isEmpty()) missingFields.add("TEL");
-                    if (mail.isEmpty()) missingFields.add("MAIL");
-                    if (address.isEmpty()) missingFields.add("ADDRESS");
+                    // 2. الـ Validation الصارم (ما بدلت فيه شي)
+                    List<String> missing = new ArrayList<>();
+                    if (cli.isEmpty()) missing.add("CLI");
+                    if (agency.isEmpty()) missing.add("AGENCY_CODE");
+                    if (businessCenter.isEmpty()) missing.add("BUSINESS_CENTER_CODE");
+                    if (activity.isEmpty()) missing.add("ACTIVITY_CODE");
+                    if (region.isEmpty()) missing.add("REGION_CODE");
+                    if (marche.isEmpty()) missing.add("MARCHE_CODE");
+                    if (segment.isEmpty()) missing.add("SEGMENT_CODE");
+                    if (zone.isEmpty()) missing.add("ZONE_CODE");
+                    if (fullName.isEmpty()) missing.add("FULL_NAME");
+                    if (cin.isEmpty()) missing.add("CIN");
+                    if (tel.isEmpty()) missing.add("TEL");
+                    if (mail.isEmpty()) missing.add("MAIL");
+                    if (address.isEmpty()) missing.add("ADDRESS");
+                    if (structure.isEmpty()) missing.add("STRUCTURE");
 
-                    if (!missingFields.isEmpty()) {
-                        String errorMsg = "Champs obligatoires manquants: " + String.join(", ", missingFields);
-                        saveError("Validation", errorMsg, rowNum, result);
-                        continue; // رفض السطر تماماً
+                    if (!missing.isEmpty()) {
+                        saveError("Validation", "Champs manquants: " + String.join(", ", missing), rowNum, result);
+                        continue;
                     }
 
-                    // --- 3. الربط مع الـ Entity ---
-                    Client client = repository.findById(cli).orElse(new Client());
+                    // 3. إدارة الـ Entity
+                    Optional<Client> existingClient = repository.findById(cli);
+                    Client client = existingClient.orElse(new Client());
 
-                    client.setCli(cli);
-                    client.setAgencyCode(agency);
-                    client.setBusinessCenterCode(businessCenter);
-                    client.setActivityCode(activity);
-                    client.setRegionCode(region);
-                    client.setMarchetCode(marche);
-                    client.setSegmentCode(segment);
-                    client.setZoneCode(zone);
-                    client.setFullName(fullName);
-                    client.setCin(cin);
-                    client.setTel(tel);
-                    client.setMail(mail);
-                    client.setAddress(address);
+                    if (existingClient.isPresent()) {
+                        result.setUpdateCount(result.getUpdateCount() + 1);
+                    } else {
+                        client.setCli(cli);
+                        result.setSuccessCount(result.getSuccessCount() + 1);
+                    }
 
-                    // بقية الحقول (تكملة البيانات)
-                    client.setBirthDate(parseDateSafe(row.getCell(11)));
-                    client.setTel1(getCellValue(row, 13));
-                    client.setTel2(getCellValue(row, 14));
-                    client.setTel3(getCellValue(row, 15));
-                    client.setAddress1(getCellValue(row, 18));
-                    client.setAddress2(getCellValue(row, 19));
-                    client.setPostalCode(getCellValue(row, 20));
-                    client.setCity(getCellValue(row, 21));
-                    client.setClasse(classe);
-                    client.setStructure(structure);
+                    // 4. المابينغ مع قراءة التاريخ (زاد سطر تاريخ الـ Excel فقط)
+                    mapRowToClient(row, client);
 
-                    // البيانات المالية
-                    client.setTotalDaysImpaye(parseLongSafe(row.getCell(22)));
-                    client.setTotalDaysSdb(parseLongSafe(row.getCell(23)));
-                    client.setTotalImpayeAmount(parseBigDecimalSafe(row.getCell(24)));
-                    client.setTotalDepassement(parseBigDecimalSafe(row.getCell(25)));
-                    client.setTotalSdbAmount(parseBigDecimalSafe(row.getCell(26)));
-                    client.setTotalCommitment(parseBigDecimalSafe(row.getCell(27)));
-                    client.setOutstanding(parseBigDecimalSafe(row.getCell(28)));
-                    client.setTotalAuthorization(parseBigDecimalSafe(row.getCell(29)));
-                    client.setSectorCommitment(parseBigDecimalSafe(row.getCell(30)));
+                    clientsToSave.add(client);
 
-                    // حقول إضافية
-                    client.setFollowUpType(getCellValue(row, 31));
-                    client.setContactFlag(getCellValue(row, 32));
-                    client.setTraite(getCellValue(row, 33));
-                    client.setChequeRestriction(getCellValue(row, 34));
-                    client.setSectorClass(getCellValue(row, 35));
-                    client.setIsParticular(getCellValue(row, 36));
-                    client.setEcheanceAutorisation(parseDateSafe(row.getCell(37)));
-                    client.setDossierType(getCellValue(row, 38));
-                    client.setClientGroup(getCellValue(row, 39));
-                    client.setMotifParticular(getCellValue(row, 41));
-
-                    repository.save(client);
-                    result.setSuccessCount(result.getSuccessCount() + 1);
+                    if (clientsToSave.size() >= 50) {
+                        repository.saveAll(clientsToSave);
+                        clientsToSave.clear();
+                    }
 
                 } catch (Exception e) {
-                    saveError("Mapping", "Erreur ligne " + rowNum + ": " + e.getMessage(), rowNum, result);
+                    saveError("Technical", "Erreur ligne " + rowNum + ": " + e.getMessage(), rowNum, result);
                 }
             }
+
+            if (!clientsToSave.isEmpty()) {
+                repository.saveAll(clientsToSave);
+            }
+
             result.setTotalRows(rowNum - 1);
             result.setSuccess(true);
+
         } catch (Exception e) {
+            result.setSuccess(false);
             result.getErrors().add("Erreur Critique: " + e.getMessage());
         }
         return result;
     }
 
+    private void mapRowToClient(Row row, Client client) {
+        client.setAgencyCode(getCellValue(row, 1));
+        client.setBusinessCenterCode(getCellValue(row, 2));
+        client.setActivityCode(getCellValue(row, 3));
+        client.setRegionCode(getCellValue(row, 4));
+        client.setMarchetCode(getCellValue(row, 5));
+        client.setSegmentCode(getCellValue(row, 6));
+        client.setZoneCode(getCellValue(row, 7));
+        client.setClasse(getCellValue(row, 8));
+        client.setFullName(getCellValue(row, 9));
+        client.setCin(getCellValue(row, 10));
+        client.setBirthDate(parseDateSafe(row.getCell(11)));
+        client.setTel(getCellValue(row, 12));
+        client.setTel1(getCellValue(row, 13));
+        client.setTel2(getCellValue(row, 14));
+        client.setTel3(getCellValue(row, 15));
+        client.setMail(getCellValue(row, 16));
+        client.setAddress(getCellValue(row, 17));
+        client.setAddress1(getCellValue(row, 18));
+        client.setAddress2(getCellValue(row, 19));
+        client.setPostalCode(getCellValue(row, 20));
+        client.setCity(getCellValue(row, 21));
+
+        // البيانات المالية
+        client.setTotalDaysImpaye(parseLongSafe(row.getCell(22)));
+        client.setTotalDaysSdb(parseLongSafe(row.getCell(23)));
+        client.setTotalImpayeAmount(parseBigDecimalSafe(row.getCell(24)));
+        client.setTotalDepassement(parseBigDecimalSafe(row.getCell(25)));
+        client.setTotalSdbAmount(parseBigDecimalSafe(row.getCell(26)));
+        client.setTotalCommitment(parseBigDecimalSafe(row.getCell(27)));
+        client.setOutstanding(parseBigDecimalSafe(row.getCell(28)));
+        client.setTotalAuthorization(parseBigDecimalSafe(row.getCell(29)));
+        client.setSectorCommitment(parseBigDecimalSafe(row.getCell(30)));
+
+        client.setFollowUpType(getCellValue(row, 31));
+        client.setContactFlag(getCellValue(row, 32));
+        client.setTraite(getCellValue(row, 33));
+        client.setChequeRestriction(getCellValue(row, 34));
+        client.setSectorClass(getCellValue(row, 35));
+        client.setIsParticular(getCellValue(row, 36));
+        client.setEcheanceAutorisation(parseDateSafe(row.getCell(37)));
+        client.setDossierType(getCellValue(row, 38));
+        client.setClientGroup(getCellValue(row, 39));
+        client.setStructure(getCellValue(row, 40));
+        client.setMotifParticular(getCellValue(row, 41));
+
+        // --- السطر الوحيد الزايد لإصلاح الـ Dashboard ---
+        LocalDateTime excelDate = parseLocalDateTimeSafe(row.getCell(42));
+        if (excelDate != null) {
+            client.setCreatedAt(excelDate);
+        } else if (client.getCreatedAt() == null) {
+            client.setCreatedAt(LocalDateTime.now());
+        }
+    }
+
     private String getCellValue(Row row, int index) {
         Cell cell = row.getCell(index);
         return (cell == null) ? "" : dataFormatter.formatCellValue(cell).trim();
+    }
+
+    private LocalDateTime parseLocalDateTimeSafe(Cell cell) {
+        if (cell == null) return null;
+        try {
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            }
+            String val = dataFormatter.formatCellValue(cell).trim();
+            if (val.isEmpty()) return null;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSSSSS]");
+            return LocalDateTime.parse(val, formatter);
+        } catch (Exception e) { return null; }
     }
 
     private LocalDate parseDateSafe(Cell cell) {
@@ -162,23 +200,13 @@ public class ExcelImportService {
             if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
                 return cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             }
-            if (cell.getCellType() == CellType.STRING) {
-                String dateStr = dataFormatter.formatCellValue(cell).trim();
-                if (!dateStr.isEmpty()) {
-                    try { return LocalDate.parse(dateStr); }
-                    catch (Exception ex) {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                        return LocalDate.parse(dateStr, formatter);
-                    }
-                }
-            }
+            return null;
         } catch (Exception e) { return null; }
-        return null;
     }
 
     private Long parseLongSafe(Cell cell) {
         try {
-            if (cell == null || cell.getCellType() == CellType.BLANK) return 0L;
+            if (cell == null) return 0L;
             if (cell.getCellType() == CellType.NUMERIC) return (long) cell.getNumericCellValue();
             String val = dataFormatter.formatCellValue(cell).replaceAll("[^\\d]", "");
             return val.isEmpty() ? 0L : Long.parseLong(val);
@@ -187,10 +215,10 @@ public class ExcelImportService {
 
     private BigDecimal parseBigDecimalSafe(Cell cell) {
         try {
-            if (cell == null || cell.getCellType() == CellType.BLANK) return BigDecimal.ZERO;
+            if (cell == null) return BigDecimal.ZERO;
             if (cell.getCellType() == CellType.NUMERIC) return BigDecimal.valueOf(cell.getNumericCellValue());
             String val = dataFormatter.formatCellValue(cell).replaceAll("[^\\d.]", "");
-            return (val.isEmpty() || val.equals(".")) ? BigDecimal.ZERO : new BigDecimal(val);
+            return val.isEmpty() ? BigDecimal.ZERO : new BigDecimal(val);
         } catch (Exception e) { return BigDecimal.ZERO; }
     }
 

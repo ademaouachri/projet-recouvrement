@@ -66,6 +66,13 @@ public class RE_commercialService {
      */
     @Transactional(readOnly = true)
     public List<Client> getClientsForUser(Utilisateur utilisateur,
+                                          String agencyCode,
+                                          String activityCode,
+                                          String marcheCode,
+                                          String segmentCode,
+                                          String businessCenterCode,
+                                          String zoneCode,
+                                          String regionCode,
                                           String postalCode,
                                           String dossierType,
                                           String structure,
@@ -84,6 +91,22 @@ public class RE_commercialService {
         List<String> zoneCodes = extractZoneCodes(utilisateur);
         List<String> regionCodes = extractRegionCodes(utilisateur);
 
+        if (zoneCode != null && !zoneCode.trim().isEmpty()) {
+
+            if (zoneCodes != null && !zoneCodes.contains(zoneCode)) {
+                return List.of(); // ليس لديه صلاحية لهذه المنطقة
+            }
+            zoneCodes = List.of(zoneCode);
+        }
+
+        // تطبيق فلتر الجهة (Region) من الـ URL (إذا تم تمريره)
+        if (regionCode != null && !regionCode.trim().isEmpty()) {
+             if (regionCodes != null && !regionCodes.contains(regionCode)) {
+                return List.of();
+            }
+            regionCodes = List.of(regionCode);
+        }
+
         // استخراج بقية الصلاحيات للجدول فقط
         List<String> activityCodes = (profil.getActivite() == 1 && utilisateur.getActivites() != null) ?
                 utilisateur.getActivites().stream().map(Activite::getCode).toList() : null;
@@ -93,6 +116,46 @@ public class RE_commercialService {
                 utilisateur.getSegments().stream().map(Segment::getCode).toList() : null;
         List<String> businessCenterCodes = (profil.getCentreAffaire() == 1 && utilisateur.getCentreAffaires() != null) ?
                 utilisateur.getCentreAffaires().stream().map(CentreAffaire::getCode).toList() : null;
+
+        // تطبيق فلتر الوكالة (Agency)
+        if (agencyCode != null && !agencyCode.trim().isEmpty()) {
+            if (agencyCodes != null && !agencyCodes.contains(agencyCode)) {
+                return List.of();
+            }
+            agencyCodes = List.of(agencyCode);
+        }
+
+        // تطبيق فلتر النشاط (Activity)
+        if (activityCode != null && !activityCode.trim().isEmpty()) {
+            if (activityCodes != null && !activityCodes.contains(activityCode)) {
+                return List.of();
+            }
+            activityCodes = List.of(activityCode);
+        }
+
+        // تطبيق فلتر السوق (Marche)
+        if (marcheCode != null && !marcheCode.trim().isEmpty()) {
+            if (marcheCodes != null && !marcheCodes.contains(marcheCode)) {
+                return List.of();
+            }
+            marcheCodes = List.of(marcheCode);
+        }
+
+        // تطبيق فلتر الشريحة (Segment)
+        if (segmentCode != null && !segmentCode.trim().isEmpty()) {
+            if (segmentCodes != null && !segmentCodes.contains(segmentCode)) {
+                return List.of();
+            }
+            segmentCodes = List.of(segmentCode);
+        }
+
+        // تطبيق فلتر مركز الأعمال (Business Center)
+        if (businessCenterCode != null && !businessCenterCode.trim().isEmpty()) {
+            if (businessCenterCodes != null && !businessCenterCodes.contains(businessCenterCode)) {
+                return List.of();
+            }
+            businessCenterCodes = List.of(businessCenterCode);
+        }
 
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
             sortBy = "totalImpayeAmount";
@@ -106,7 +169,7 @@ public class RE_commercialService {
         );
     }
 
-    // --- ميثودات مساعدة (Helper Methods) ---
+
 
     private List<String> extractAgencyCodes(Utilisateur u) {
         if (u.getProfil().getAgence() == 1 && u.getAgences() != null) {

@@ -44,6 +44,13 @@ public class RE_commercialController {
     @GetMapping("/clients")
     public ResponseEntity<List<Client>> getClients(
             @AuthenticationPrincipal Utilisateur utilisateur,
+            @RequestParam(required = false) String agencyCode,
+            @RequestParam(required = false) String activityCode,
+            @RequestParam(required = false) String marcheCode,
+            @RequestParam(required = false) String segmentCode,
+            @RequestParam(required = false) String businessCenterCode,
+            @RequestParam(required = false) String zoneCode,
+            @RequestParam(required = false) String regionCode,
             @RequestParam(required = false) String postalCode,
             @RequestParam(required = false) String dossierType,
             @RequestParam(required = false) String structure,
@@ -57,6 +64,13 @@ public class RE_commercialController {
 
         List<Client> clients = reCommercialService.getClientsForUser(
                 utilisateur,
+                agencyCode,
+                activityCode,
+                marcheCode,
+                segmentCode,
+                businessCenterCode,
+                zoneCode,
+                regionCode,
                 postalCode,
                 dossierType,
                 structure,

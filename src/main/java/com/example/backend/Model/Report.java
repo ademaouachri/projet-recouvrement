@@ -90,6 +90,12 @@ public class Report {
     @Column(name = "UPDATED_DATE")
     private LocalDateTime updatedDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS")
+    private PaymentStatus status;
+    @Column(name = "PAID_AMOUNT")
+    private Double paidAmount;
+
     @Column(name = "SCHEDULE_NUMBER")
     private Integer scheduleNumber;
 

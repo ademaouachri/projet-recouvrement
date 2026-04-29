@@ -4,7 +4,8 @@ import com.example.backend.Exception.ResourceNotFoundException;
 import com.example.backend.Model.*;
 import com.example.backend.Repository.*;
 import org.springframework.stereotype.Service;
-import java.util.*; // Import Set and HashSet
+import org.springframework.transaction.annotation.Transactional;
+import java.util.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
@@ -25,11 +26,12 @@ public class UtilisateurService {
     private final PasswordEncoder passwordEncoder;
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository, OtpService otpService,
-                              ProfilRepository profilRepository, PalierRepository palierRepository, ZoneRepository zoneRepository,
-                              RegionRepository regionRepository, ActiviteRepository activiteRepository,
-                              SegmentRepository segmentRepository, CentreAffaireRepository centreAffaireRepository,
-                              MarcheRepository marcheRepository, AgenceRepository agenceRepository,
-                              PasswordEncoder passwordEncoder, EmailService emailService) {
+                              ProfilRepository profilRepository, PalierRepository palierRepository,
+                              ZoneRepository zoneRepository, RegionRepository regionRepository,
+                              ActiviteRepository activiteRepository, SegmentRepository segmentRepository,
+                              CentreAffaireRepository centreAffaireRepository, MarcheRepository marcheRepository,
+                              AgenceRepository agenceRepository, PasswordEncoder passwordEncoder,
+                              EmailService emailService) {
         this.utilisateurRepository = utilisateurRepository;
         this.profilRepository = profilRepository;
         this.otpService = otpService;
@@ -45,6 +47,7 @@ public class UtilisateurService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public void registerUser(Utilisateur user) {
         if (utilisateurRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà");
@@ -57,106 +60,7 @@ public class UtilisateurService {
             Profil existingProfil = profilRepository.findById(user.getProfil().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Profil non trouvé"));
             user.setProfil(existingProfil);
-        }
-
-        // Modification ici: Utilisation de Set au lieu de List
-        if (user.getProfil() != null && user.getProfil().getPalier() == 1) {
-            if (user.getPaliers() != null && !user.getPaliers().isEmpty()) {
-                Set<Palier> attachedPaliers = new HashSet<>();
-                for (Palier p : user.getPaliers()) {
-                    attachedPaliers.add(palierRepository.findById(p.getId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Palier non trouvé")));
-                }
-                user.setPaliers(attachedPaliers);
-            } else {
-                throw new IllegalArgumentException("Le palier est obligatoire");
-            }
-        }
-
-        if (user.getProfil() != null && user.getProfil().getZone() == 1) {
-            if (user.getZones() != null && !user.getZones().isEmpty()) {
-                Set<Zone> attached = new HashSet<>();
-                for (Zone z : user.getZones()) {
-                    attached.add(zoneRepository.findById(z.getId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Zone non trouvée")));
-                }
-                user.setZones(attached);
-            } else {
-                throw new IllegalArgumentException("La zone est obligatoire");
-            }
-        }
-
-        if (user.getProfil() != null && user.getProfil().getRegion() == 1) {
-            if (user.getRegions() != null && !user.getRegions().isEmpty()) {
-                Set<Region> attached = new HashSet<>();
-                for (Region i : user.getRegions()) {
-                    attached.add(regionRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Region non trouvée")));
-                }
-                user.setRegions(attached);
-            } else {
-                throw new IllegalArgumentException("La région est obligatoire");
-            }
-        }
-
-        if (user.getProfil() != null && user.getProfil().getAgence() == 1) {
-            if (user.getAgences() != null && !user.getAgences().isEmpty()) {
-                Set<Agence> attached = new HashSet<>();
-                for (Agence i : user.getAgences()) {
-                    attached.add(agenceRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Agence non trouvée")));
-                }
-                user.setAgences(attached);
-            } else {
-                throw new IllegalArgumentException("L'agence est obligatoire");
-            }
-        }
-
-        if (user.getProfil() != null && user.getProfil().getActivite() == 1) {
-            if (user.getActivites() != null && !user.getActivites().isEmpty()) {
-                Set<Activite> attached = new HashSet<>();
-                for (Activite i : user.getActivites()) {
-                    attached.add(activiteRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Activite non trouvée")));
-                }
-                user.setActivites(attached);
-            } else {
-                throw new IllegalArgumentException("L'activité est obligatoire");
-            }
-        }
-
-        // Appliquer le même principe pour CentreAffaire, Marche, Segment...
-        if (user.getProfil() != null && user.getProfil().getCentreAffaire() == 1) {
-            if (user.getCentreAffaires() != null && !user.getCentreAffaires().isEmpty()) {
-                Set<CentreAffaire> attached = new HashSet<>();
-                for (CentreAffaire i : user.getCentreAffaires()) {
-                    attached.add(centreAffaireRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("CentreAffaire non trouvé")));
-                }
-                user.setCentreAffaires(attached);
-            } else {
-                throw new IllegalArgumentException("Le centre d'affaire est obligatoire");
-            }
-        }
-
-        if (user.getProfil() != null && user.getProfil().getMarche() == 1) {
-            if (user.getMarches() != null && !user.getMarches().isEmpty()) {
-                Set<Marche> attached = new HashSet<>();
-                for (Marche i : user.getMarches()) {
-                    attached.add(marcheRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Marche non trouvé")));
-                }
-                user.setMarches(attached);
-            } else {
-                throw new IllegalArgumentException("Le marché est obligatoire");
-            }
-        }
-
-        if (user.getProfil() != null && user.getProfil().getSegment() == 1) {
-            if (user.getSegments() != null && !user.getSegments().isEmpty()) {
-                Set<Segment> attached = new HashSet<>();
-                for (Segment i : user.getSegments()) {
-                    attached.add(segmentRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Segment non trouvé")));
-                }
-                user.setSegments(attached);
-            } else {
-                throw new IllegalArgumentException("Le segment est obligatoire");
-            }
+            attachRelatedEntities(user, user, existingProfil);
         }
 
         try {
@@ -171,60 +75,120 @@ public class UtilisateurService {
         }
     }
 
-    // ... ساكمل لك الـ updateUtilisateur بنفس الطريقة ...
-
+    @Transactional
     public Utilisateur updateUtilisateur(UUID id, Utilisateur userDetails) {
         return utilisateurRepository.findById(id).map(user -> {
             user.setNom(userDetails.getNom());
             user.setPrenom(userDetails.getPrenom());
             user.setEmail(userDetails.getEmail());
+            user.setMatricule(userDetails.getMatricule());
             user.setUtilisateurActive(userDetails.getUtilisateurActive());
 
             Profil profil = profilRepository.findById(userDetails.getProfil().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Profil not found"));
             user.setProfil(profil);
 
-            // Update Paliers
-            if (profil.getPalier() == 1) {
-                Set<Palier> attached = new HashSet<>();
-                if (userDetails.getPaliers() != null) {
-                    for (Palier p : userDetails.getPaliers()) {
-                        attached.add(palierRepository.findById(p.getId()).orElseThrow(() -> new ResourceNotFoundException("Palier not found")));
-                    }
-                    user.setPaliers(attached);
-                } else { throw new IllegalArgumentException("Palier obligatoire"); }
-            } else { user.getPaliers().clear(); }
-
-            // Update Activités
-            if (profil.getActivite() == 1) {
-                Set<Activite> attached = new HashSet<>();
-                if (userDetails.getActivites() != null) {
-                    for (Activite i : userDetails.getActivites()) {
-                        attached.add(activiteRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Activite not found")));
-                    }
-                    user.setActivites(attached);
-                } else { throw new IllegalArgumentException("Activite obligatoire"); }
-            } else { user.getActivites().clear(); }
-
-            // Update Agences
-            if (profil.getAgence() == 1) {
-                Set<Agence> attached = new HashSet<>();
-                if (userDetails.getAgences() != null) {
-                    for (Agence i : userDetails.getAgences()) {
-                        attached.add(agenceRepository.findById(i.getId()).orElseThrow(() -> new ResourceNotFoundException("Agence not found")));
-                    }
-                    user.setAgences(attached);
-                } else { throw new IllegalArgumentException("Agence obligatoire"); }
-            } else { user.getAgences().clear(); }
-
-            // تواصل نفس المنطق لبقية الـ Collections (Zone, Region, Marche...)
-            // فقط استعمل Set<T> attached = new HashSet<>();
+            // استدعاء ميثود الربط لتحديث القوائم
+            attachRelatedEntities(user, userDetails, profil);
 
             return utilisateurRepository.save(user);
         }).orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
     }
 
-    // بقية الميثودات (verifyUserOtp, setPassword...) تبقى كما هي
+    /**
+     * ميثود مساعدة لربط الكيانات (Regions, Segments, etc.) بناءً على صلاحيات البروفايل
+     */
+    private void attachRelatedEntities(Utilisateur targetUser, Utilisateur sourceData, Profil profil) {
+
+        // Paliers
+        if (profil.getPalier() == 1) {
+            if (sourceData.getPaliers() != null && !sourceData.getPaliers().isEmpty()) {
+                Set<Palier> attached = new HashSet<>();
+                for (Palier p : sourceData.getPaliers()) {
+                    attached.add(palierRepository.findById(p.getId()).orElseThrow(() -> new ResourceNotFoundException("Palier not found")));
+                }
+                targetUser.setPaliers(attached);
+            } else { throw new IllegalArgumentException("Le palier est obligatoire"); }
+        } else { targetUser.getPaliers().clear(); }
+
+        // Zones
+        if (profil.getZone() == 1) {
+            if (sourceData.getZones() != null && !sourceData.getZones().isEmpty()) {
+                Set<Zone> attached = new HashSet<>();
+                for (Zone z : sourceData.getZones()) {
+                    attached.add(zoneRepository.findById(z.getId()).orElseThrow(() -> new ResourceNotFoundException("Zone not found")));
+                }
+                targetUser.setZones(attached);
+            } else { throw new IllegalArgumentException("La zone est obligatoire"); }
+        } else { targetUser.getZones().clear(); }
+
+        // Regions
+        if (profil.getRegion() == 1) {
+            if (sourceData.getRegions() != null && !sourceData.getRegions().isEmpty()) {
+                Set<Region> attached = new HashSet<>();
+                for (Region r : sourceData.getRegions()) {
+                    attached.add(regionRepository.findById(r.getId()).orElseThrow(() -> new ResourceNotFoundException("Region not found")));
+                }
+                targetUser.setRegions(attached);
+            } else { throw new IllegalArgumentException("La région est obligatoire"); }
+        } else { targetUser.getRegions().clear(); }
+
+        // Agences
+        if (profil.getAgence() == 1) {
+            if (sourceData.getAgences() != null && !sourceData.getAgences().isEmpty()) {
+                Set<Agence> attached = new HashSet<>();
+                for (Agence a : sourceData.getAgences()) {
+                    attached.add(agenceRepository.findById(a.getId()).orElseThrow(() -> new ResourceNotFoundException("Agence not found")));
+                }
+                targetUser.setAgences(attached);
+            } else { throw new IllegalArgumentException("L'agence est obligatoire"); }
+        } else { targetUser.getAgences().clear(); }
+
+        // Activités
+        if (profil.getActivite() == 1) {
+            if (sourceData.getActivites() != null && !sourceData.getActivites().isEmpty()) {
+                Set<Activite> attached = new HashSet<>();
+                for (Activite act : sourceData.getActivites()) {
+                    attached.add(activiteRepository.findById(act.getId()).orElseThrow(() -> new ResourceNotFoundException("Activite not found")));
+                }
+                targetUser.setActivites(attached);
+            } else { throw new IllegalArgumentException("L'activité est obligatoire"); }
+        } else { targetUser.getActivites().clear(); }
+
+        // Centre Affaires
+        if (profil.getCentreAffaire() == 1) {
+            if (sourceData.getCentreAffaires() != null && !sourceData.getCentreAffaires().isEmpty()) {
+                Set<CentreAffaire> attached = new HashSet<>();
+                for (CentreAffaire c : sourceData.getCentreAffaires()) {
+                    attached.add(centreAffaireRepository.findById(c.getId()).orElseThrow(() -> new ResourceNotFoundException("Centre d'affaire not found")));
+                }
+                targetUser.setCentreAffaires(attached);
+            } else { throw new IllegalArgumentException("Le centre d'affaire est obligatoire"); }
+        } else { targetUser.getCentreAffaires().clear(); }
+
+        // Marches
+        if (profil.getMarche() == 1) {
+            if (sourceData.getMarches() != null && !sourceData.getMarches().isEmpty()) {
+                Set<Marche> attached = new HashSet<>();
+                for (Marche m : sourceData.getMarches()) {
+                    attached.add(marcheRepository.findById(m.getId()).orElseThrow(() -> new ResourceNotFoundException("Marche not found")));
+                }
+                targetUser.setMarches(attached);
+            } else { throw new IllegalArgumentException("Le marché est obligatoire"); }
+        } else { targetUser.getMarches().clear(); }
+
+        // Segments
+        if (profil.getSegment() == 1) {
+            if (sourceData.getSegments() != null && !sourceData.getSegments().isEmpty()) {
+                Set<Segment> attached = new HashSet<>();
+                for (Segment s : sourceData.getSegments()) {
+                    attached.add(segmentRepository.findById(s.getId()).orElseThrow(() -> new ResourceNotFoundException("Segment not found")));
+                }
+                targetUser.setSegments(attached);
+            } else { throw new IllegalArgumentException("Le segment est obligatoire"); }
+        } else { targetUser.getSegments().clear(); }
+    }
+
     public String verifyUserOtp(String email, String otpInput) {
         if (email == null || otpInput == null) return "Email ou OTP manquant";
         try {
@@ -242,6 +206,7 @@ public class UtilisateurService {
     }
 
     public List<Utilisateur> getAllUtilisateurs() { return utilisateurRepository.findAll(); }
+
     public Optional<Utilisateur> getUtilisateurById(UUID id) { return utilisateurRepository.findById(id); }
 
     public String activateOrDeactivateUtilisateur(UUID id, Boolean active) {

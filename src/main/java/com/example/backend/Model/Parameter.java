@@ -16,4 +16,9 @@ public class Parameter {
     @Id
     private String keyParam;
     private String valueParam;
+    private String codeParametre; // مثلاً "phase commerciale"
+    private String typeParametre; // "SDB" أو "IMP"
+    private Integer jourDebut;
+    private Integer jourFin;
+
 }

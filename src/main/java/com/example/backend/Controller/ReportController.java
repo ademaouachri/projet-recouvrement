@@ -21,11 +21,9 @@ public class ReportController {
 
     /**
      * جلب قائمة جميع التقارير مع التثبت الأوتوماتيكي من البنك
-     * التغيير صار هنا: استدعاء getAllReportsWithAutoCheck()
      */
     @GetMapping("/all")
     public ResponseEntity<List<Report>> getAllReports() {
-        // نعيطو للميثود اللي تثبت في الـ API متاع البنك أوتوماتيكياً
         List<Report> reports = reportService.getAllReportsWithAutoCheck();
         return ResponseEntity.ok(reports);
     }
@@ -48,12 +46,16 @@ public class ReportController {
         return ResponseEntity.noContent().build();
     }
 
-    // الميثود هذي تستعملها إذا حبيت تزيد خلاص يدوي من الـ Backend متاعك
+    // ✅ AJOUTER CETTE MÉTHODE
+    @GetMapping("/is-past-date")
+    public ResponseEntity<Boolean> isPastDate(@RequestParam String date) {
+        boolean result = reportService.isPastDate(date);
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/pay")
     public ResponseEntity<Report> pay(@RequestParam String cli,
                                       @RequestParam double amount) {
-        // ملاحظة: تأكد أن addPaymentByCli موجودة في الـ Service المحدث
-        // إذا نحيتها استعمل الميثود المتاحة عندك
-        return ResponseEntity.ok(reportService.saveReport(null)); // مثال فقط
+        return ResponseEntity.ok(reportService.saveReport(null));
     }
 }

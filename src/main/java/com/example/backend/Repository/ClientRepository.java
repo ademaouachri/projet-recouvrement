@@ -18,17 +18,16 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     Optional<Client> findByCin(String cin);
 
-    // 1. ميثود الـ Dashboard الرئيسية - مع المسار الكامل للـ DTO
     @Query("""
         SELECT new com.example.backend.DTO.DashboardStats(
-            COUNT(c), 
-            SUM(c.totalImpayeAmount), 
-            SUM(c.totalSdbAmount), 
+            COUNT(DISTINCT c.cli),
+            SUM(c.totalImpayeAmount),
+            SUM(c.totalSdbAmount),
             SUM(c.totalCommitment),
+            (SELECT COUNT(*) FROM Report r WHERE r.point = 'Facilité de paiement'),
+            (SELECT COUNT(*) FROM Report r WHERE r.point = 'Promesse de règlement'),
             SUM(CASE WHEN c.traite = 'Y' THEN 1L ELSE 0L END),
-            SUM(CASE WHEN c.contactFlag = 'Y' THEN 1L ELSE 0L END),
-            SUM(CASE WHEN c.dossierType = 'Litige' THEN 1L ELSE 0L END),
-            SUM(CASE WHEN c.followUpType = 'Watchlist' THEN 1L ELSE 0L END)
+            SUM(CASE WHEN c.contactFlag = 'Y' THEN 1L ELSE 0L END)
         )
         FROM Client c
         WHERE (:agencyCodes IS NULL OR c.agencyCode IN :agencyCodes)
@@ -63,7 +62,6 @@ public interface ClientRepository extends JpaRepository<Client, String> {
             @Param("startDate") LocalDateTime startDate
     );
 
-    // 2. ميثود الـ Charts - مع المسار الكامل وإضافة السنة
     @Query("""
         SELECT new com.example.backend.DTO.MonthlyEvolutionDTO(
             YEAR(c.createdAt),
@@ -88,7 +86,6 @@ public interface ClientRepository extends JpaRepository<Client, String> {
             @Param("structure") String structure
     );
 
-    // 3. ميثود البحث بالفلترة
     @Query("""
         SELECT c FROM Client c
         WHERE (:agencyCodes IS NULL OR c.agencyCode IN :agencyCodes)

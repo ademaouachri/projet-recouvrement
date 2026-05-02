@@ -1,11 +1,15 @@
 package com.example.backend.Controller;
 
 import com.example.backend.DTO.ImportResult;
+import com.example.backend.Model.Client;
+import com.example.backend.Repository.ClientRepository;
 import com.example.backend.Service.ExcelImportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/clients")
@@ -13,9 +17,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class ClientExcelController {
 
     private final ExcelImportService excelImportService;
+    private final ClientRepository clientRepository;  // ✅ Ajouter cette ligne
 
-    public ClientExcelController(ExcelImportService excelImportService) {
+    // ✅ Modifier le constructeur
+    public ClientExcelController(ExcelImportService excelImportService, ClientRepository clientRepository) {
         this.excelImportService = excelImportService;
+        this.clientRepository = clientRepository;
     }
 
     @PostMapping("/import-excel")
@@ -43,5 +50,16 @@ public class ClientExcelController {
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(result);
         }
+    }
+
+    // ✅ Ajouter cette méthode
+    @GetMapping("/{cli}/montant-total")
+    public ResponseEntity<BigDecimal> getMontantTotal(@PathVariable String cli) {
+        Client client = clientRepository.findById(cli)
+                .orElseThrow(() -> new RuntimeException("Client non trouvé : " + cli));
+
+        BigDecimal montantTotal = client.getMontantTotal();
+
+        return ResponseEntity.ok(montantTotal);
     }
 }

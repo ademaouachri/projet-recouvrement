@@ -24,6 +24,9 @@ public class ImportErrorLog {
     @Column(name = "id", columnDefinition = "BINARY(16)", updatable = false, nullable = false)
     private UUID id;
 
+    @Column(name = "FILE_NAME", nullable = false)
+    private String fileName;
+
     @Column(name = "FIELD_NAME")
     private String fieldName;
 
@@ -36,8 +39,9 @@ public class ImportErrorLog {
     @Column(name = "CREATED_AT")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-
-    public ImportErrorLog(String fieldName, String description, int rowNumber) {
+    // ✅ UN SEUL constructeur avec fileName
+    public ImportErrorLog(String fileName, String fieldName, String description, int rowNumber) {
+        this.fileName = fileName;
         this.fieldName = fieldName;
         this.description = description;
         this.rowNumber = rowNumber;

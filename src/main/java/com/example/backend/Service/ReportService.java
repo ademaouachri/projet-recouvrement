@@ -58,7 +58,7 @@ public class ReportService {
     private void updatePaymentStatusBasedOnDate(Report report) {
         double paid = (report.getPaidAmount() != null) ? report.getPaidAmount() : 0.0;
         double total = (report.getAmount() != null) ? report.getAmount() : 0.0;
-        boolean isPastDate = report.getEstimationDate() != null && isPastDate(report.getEstimationDate());
+        boolean isPastDate = report.getEngagementDate() != null && isPastDate(report.getEngagementDate());
 
         // 1. الخلاص الكامل ديما PAYE
         if (paid >= total && total > 0) {
@@ -102,7 +102,7 @@ public class ReportService {
     /**
      * التحقق من التاريخ (مقارنة تاريخ التقرير مع تاريخ اليوم)
      */
-    private boolean isPastDate(String dateStr) {
+    public boolean isPastDate(String dateStr) {
         try {
             // التنسيق المعتمد yyyy-MM-dd (تأكد أنه نفس التنسيق القادم من Angular)
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

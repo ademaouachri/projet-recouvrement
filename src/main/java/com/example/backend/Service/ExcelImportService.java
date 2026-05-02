@@ -3,6 +3,7 @@ package com.example.backend.Service;
 import com.example.backend.DTO.ImportResult;
 import com.example.backend.Model.Client;
 import com.example.backend.Model.ImportErrorLog;
+import com.example.backend.Model.Parameter;
 import com.example.backend.Repository.ClientRepository;
 import com.example.backend.Repository.ImportErrorLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ExcelImportService {
 
     private final ClientRepository repository;
     private final ImportErrorLogRepository errorLogRepository;
+    private final ParameterService parameterService; // ✅ تم إضافة السيرفيس
     private final DataFormatter dataFormatter = new DataFormatter();
 
     @Transactional
@@ -34,6 +36,16 @@ public class ExcelImportService {
         ImportResult result = new ImportResult();
         List<Client> clientsToSave = new ArrayList<>();
         int rowNum = 0;
+        String fileName = file.getOriginalFilename();
+
+        // حذف الأخطاء القديمة
+        errorLogRepository.deleteByFileName(fileName);
+
+        // 1. جلب البارامترات مرة واحدة للسرعة
+        Parameter amiableIMP = parameterService.getByCodeAndType("phase amiable", "IMP");
+        Parameter amiableSDB = parameterService.getByCodeAndType("phase amiable", "SDB");
+        Parameter commIMP = parameterService.getByCodeAndType("phase commerciale", "IMP");
+        Parameter commSDB = parameterService.getByCodeAndType("phase commerciale", "SDB");
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -43,7 +55,7 @@ public class ExcelImportService {
                 if (rowNum == 1 || isRowEmpty(row)) continue;
 
                 try {
-                    // 1. قراءة البيانات للـ Validation (نفس منطقك بالظبط)
+                    // 2. قراءة البيانات للـ Validation الصارم (نفس منطقك)
                     String cli = getCellValue(row, 0);
                     String agency = getCellValue(row, 1);
                     String businessCenter = getCellValue(row, 2);
@@ -57,9 +69,7 @@ public class ExcelImportService {
                     String tel = getCellValue(row, 12);
                     String mail = getCellValue(row, 16);
                     String address = getCellValue(row, 17);
-                    String structure = getCellValue(row, 40);
 
-                    // 2. الـ Validation الصارم (ما بدلت فيه شي)
                     List<String> missing = new ArrayList<>();
                     if (cli.isEmpty()) missing.add("CLI");
                     if (agency.isEmpty()) missing.add("AGENCY_CODE");
@@ -74,10 +84,9 @@ public class ExcelImportService {
                     if (tel.isEmpty()) missing.add("TEL");
                     if (mail.isEmpty()) missing.add("MAIL");
                     if (address.isEmpty()) missing.add("ADDRESS");
-                    if (structure.isEmpty()) missing.add("STRUCTURE");
 
                     if (!missing.isEmpty()) {
-                        saveError("Validation", "Champs manquants: " + String.join(", ", missing), rowNum, result);
+                        saveError(fileName, "Validation", "Champs manquants: " + String.join(", ", missing), rowNum, result);
                         continue;
                     }
 
@@ -92,8 +101,8 @@ public class ExcelImportService {
                         result.setSuccessCount(result.getSuccessCount() + 1);
                     }
 
-                    // 4. المابينغ مع قراءة التاريخ (زاد سطر تاريخ الـ Excel فقط)
-                    mapRowToClient(row, client);
+                    // 4. المابينغ مع تعمير الـ Structure آلياً (المنطق الجديد)
+                    mapRowToClient(row, client, amiableIMP, amiableSDB, commIMP, commSDB);
 
                     clientsToSave.add(client);
 
@@ -103,7 +112,7 @@ public class ExcelImportService {
                     }
 
                 } catch (Exception e) {
-                    saveError("Technical", "Erreur ligne " + rowNum + ": " + e.getMessage(), rowNum, result);
+                    saveError(fileName, "Technical", "Erreur ligne " + rowNum + ": " + e.getMessage(), rowNum, result);
                 }
             }
 
@@ -121,7 +130,8 @@ public class ExcelImportService {
         return result;
     }
 
-    private void mapRowToClient(Row row, Client client) {
+    private void mapRowToClient(Row row, Client client, Parameter aIMP, Parameter aSDB, Parameter cIMP, Parameter cSDB) {
+        // مابينغ المعلومات الأساسية (كما هي في كودك)
         client.setAgencyCode(getCellValue(row, 1));
         client.setBusinessCenterCode(getCellValue(row, 2));
         client.setActivityCode(getCellValue(row, 3));
@@ -145,8 +155,10 @@ public class ExcelImportService {
         client.setCity(getCellValue(row, 21));
 
         // البيانات المالية
-        client.setTotalDaysImpaye(parseLongSafe(row.getCell(22)));
-        client.setTotalDaysSdb(parseLongSafe(row.getCell(23)));
+        long daysImpaye = parseLongSafe(row.getCell(22));
+        long daysSdb = parseLongSafe(row.getCell(23));
+        client.setTotalDaysImpaye(daysImpaye);
+        client.setTotalDaysSdb(daysSdb);
         client.setTotalImpayeAmount(parseBigDecimalSafe(row.getCell(24)));
         client.setTotalDepassement(parseBigDecimalSafe(row.getCell(25)));
         client.setTotalSdbAmount(parseBigDecimalSafe(row.getCell(26)));
@@ -164,16 +176,30 @@ public class ExcelImportService {
         client.setEcheanceAutorisation(parseDateSafe(row.getCell(37)));
         client.setDossierType(getCellValue(row, 38));
         client.setClientGroup(getCellValue(row, 39));
-        client.setStructure(getCellValue(row, 40));
         client.setMotifParticular(getCellValue(row, 41));
 
-        // --- السطر الوحيد الزايد لإصلاح الـ Dashboard ---
+        // --- ✅ تعمير الـ Structure بناءً على الأيام والبارامترات ---
+        if (daysSdb > 0) {
+            if (checkRange(daysSdb, aSDB)) client.setStructure("S003");
+            else if (checkRange(daysSdb, cSDB)) client.setStructure("S002");
+            else client.setStructure(getCellValue(row, 40));
+        } else {
+            if (checkRange(daysImpaye, aIMP)) client.setStructure("S003");
+            else if (checkRange(daysImpaye, cIMP)) client.setStructure("S002");
+            else client.setStructure(getCellValue(row, 40));
+        }
+
+        // تاريخ الإضافة (كما هو في كودك)
         LocalDateTime excelDate = parseLocalDateTimeSafe(row.getCell(42));
         if (excelDate != null) {
             client.setCreatedAt(excelDate);
         } else if (client.getCreatedAt() == null) {
             client.setCreatedAt(LocalDateTime.now());
         }
+    }
+
+    private boolean checkRange(long days, Parameter param) {
+        return param != null && days >= param.getJourDebut() && days <= param.getJourFin();
     }
 
     private String getCellValue(Row row, int index) {
@@ -228,8 +254,8 @@ public class ExcelImportService {
         return cell == null || cell.getCellType() == CellType.BLANK;
     }
 
-    private void saveError(String field, String message, int rowNum, ImportResult result) {
+    private void saveError(String fileName, String field, String message, int rowNum, ImportResult result) {
         result.getErrors().add("Ligne " + rowNum + ": " + message);
-        errorLogRepository.save(new ImportErrorLog(field, message, rowNum));
+        errorLogRepository.save(new ImportErrorLog(fileName, field, message, rowNum));
     }
 }

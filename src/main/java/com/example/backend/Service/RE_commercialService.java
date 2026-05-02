@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -26,30 +25,23 @@ public class RE_commercialService {
             "createdAt", "updatedAt", "totalDepassement", "totalSdbAmount"
     );
 
-    /**
-     * 1. ميثود الـ Dashboard (الجديدة)
-     * تجلب الأرقام والـ Chart مع احترام صلاحيات المستخدم
-     */
     @Transactional(readOnly = true)
     public DashboardStats getDashboardData(Utilisateur utilisateur, String structure, LocalDateTime startDate) {
 
-        // استخراج الصلاحيات (نفس منطق الجدول)
         List<String> agencyCodes = extractAgencyCodes(utilisateur);
         List<String> zoneCodes = extractZoneCodes(utilisateur);
         List<String> regionCodes = extractRegionCodes(utilisateur);
+        String effectiveStructure = extractStructure(utilisateur);
 
-        // جلب الأرقام الكبيرة من الـ Repository
         DashboardStats stats = clientRepository.getDashboardGlobalStats(
                 agencyCodes, zoneCodes, regionCodes, null, null, null, null,
-                null, null, structure, null, null, null, startDate
+                null, null, effectiveStructure, null, null, null, startDate
         );
 
-        // جلب بيانات الـ Charts (التطور الشهري)
         List<MonthlyEvolutionDTO> monthlyStats = clientRepository.getDashboardMonthlyStats(
-                agencyCodes, zoneCodes, regionCodes, structure
+                agencyCodes, zoneCodes, regionCodes, effectiveStructure
         );
 
-        // دمج النتائج
         if (stats != null) {
             stats.setMonthlyEvolution(monthlyStats);
         } else {
@@ -60,10 +52,6 @@ public class RE_commercialService {
         return stats;
     }
 
-    /**
-     * 2. ميثود قائمة العملاء (القديمة)
-     * مع إضافة الفلاتر الجديدة (structure, fullName)
-     */
     @Transactional(readOnly = true)
     public List<Client> getClientsForUser(Utilisateur utilisateur,
                                           String agencyCode,
@@ -86,28 +74,26 @@ public class RE_commercialService {
         Profil profil = utilisateur.getProfil();
         if (profil == null) return List.of();
 
-        // تحضير الـ Perimetre (نفس المنطق)
+        String effectiveStructure = extractStructure(utilisateur);
+
         List<String> agencyCodes = extractAgencyCodes(utilisateur);
         List<String> zoneCodes = extractZoneCodes(utilisateur);
         List<String> regionCodes = extractRegionCodes(utilisateur);
 
         if (zoneCode != null && !zoneCode.trim().isEmpty()) {
-
             if (zoneCodes != null && !zoneCodes.contains(zoneCode)) {
-                return List.of(); // ليس لديه صلاحية لهذه المنطقة
+                return List.of();
             }
             zoneCodes = List.of(zoneCode);
         }
 
-        // تطبيق فلتر الجهة (Region) من الـ URL (إذا تم تمريره)
         if (regionCode != null && !regionCode.trim().isEmpty()) {
-             if (regionCodes != null && !regionCodes.contains(regionCode)) {
+            if (regionCodes != null && !regionCodes.contains(regionCode)) {
                 return List.of();
             }
             regionCodes = List.of(regionCode);
         }
 
-        // استخراج بقية الصلاحيات للجدول فقط
         List<String> activityCodes = (profil.getActivite() == 1 && utilisateur.getActivites() != null) ?
                 utilisateur.getActivites().stream().map(Activite::getCode).toList() : null;
         List<String> marcheCodes = (profil.getMarche() == 1 && utilisateur.getMarches() != null) ?
@@ -117,7 +103,6 @@ public class RE_commercialService {
         List<String> businessCenterCodes = (profil.getCentreAffaire() == 1 && utilisateur.getCentreAffaires() != null) ?
                 utilisateur.getCentreAffaires().stream().map(CentreAffaire::getCode).toList() : null;
 
-        // تطبيق فلتر الوكالة (Agency)
         if (agencyCode != null && !agencyCode.trim().isEmpty()) {
             if (agencyCodes != null && !agencyCodes.contains(agencyCode)) {
                 return List.of();
@@ -125,7 +110,6 @@ public class RE_commercialService {
             agencyCodes = List.of(agencyCode);
         }
 
-        // تطبيق فلتر النشاط (Activity)
         if (activityCode != null && !activityCode.trim().isEmpty()) {
             if (activityCodes != null && !activityCodes.contains(activityCode)) {
                 return List.of();
@@ -133,7 +117,6 @@ public class RE_commercialService {
             activityCodes = List.of(activityCode);
         }
 
-        // تطبيق فلتر السوق (Marche)
         if (marcheCode != null && !marcheCode.trim().isEmpty()) {
             if (marcheCodes != null && !marcheCodes.contains(marcheCode)) {
                 return List.of();
@@ -141,7 +124,6 @@ public class RE_commercialService {
             marcheCodes = List.of(marcheCode);
         }
 
-        // تطبيق فلتر الشريحة (Segment)
         if (segmentCode != null && !segmentCode.trim().isEmpty()) {
             if (segmentCodes != null && !segmentCodes.contains(segmentCode)) {
                 return List.of();
@@ -149,7 +131,6 @@ public class RE_commercialService {
             segmentCodes = List.of(segmentCode);
         }
 
-        // تطبيق فلتر مركز الأعمال (Business Center)
         if (businessCenterCode != null && !businessCenterCode.trim().isEmpty()) {
             if (businessCenterCodes != null && !businessCenterCodes.contains(businessCenterCode)) {
                 return List.of();
@@ -161,15 +142,25 @@ public class RE_commercialService {
             sortBy = "totalImpayeAmount";
         }
 
-        Sort sort = "asc".equalsIgnoreCase(sortDir) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = "asc".equalsIgnoreCase(sortDir) ?
+                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         return clientRepository.findByPerimetre(
-                agencyCodes, zoneCodes, regionCodes, activityCodes, marcheCodes, segmentCodes, businessCenterCodes,
-                postalCode, dossierType, structure, fullName, clientGroup, createdBy, startDate, sort
+                agencyCodes, zoneCodes, regionCodes, activityCodes, marcheCodes,
+                segmentCodes, businessCenterCodes, postalCode, dossierType,
+                effectiveStructure, fullName, clientGroup, createdBy, startDate,
+                sort
         );
     }
 
+    // ==================== Extract Methods ====================
 
+    private String extractStructure(Utilisateur u) {
+        if (u.getProfil().getStructure() != null) {
+            return u.getProfil().getStructure().name();
+        }
+        return null;
+    }
 
     private List<String> extractAgencyCodes(Utilisateur u) {
         if (u.getProfil().getAgence() == 1 && u.getAgences() != null) {

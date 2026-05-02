@@ -25,6 +25,7 @@ public class Report {
     @UuidGenerator
     @Column(updatable = false, nullable = false)
     private UUID id;
+
     @Column(name = "CLI")
     private String cli; // Numéro client
 
@@ -46,16 +47,13 @@ public class Report {
     @Column(name = "AMOUNT")
     private Double amount;
 
-    @Column(name = "ESTIMATION_DATE")
-    private String estimationDate; // Format DD/MM/YY dans l'image
-
     @Column(name = "LOCATION")
     private String location;
 
     // --- Champs de la seconde capture (Partie Droite) ---
 
     @Column(name = "REPORT", length = 2000)
-    private String reportLabel; // Ex: "FACILITE DE PAIEMENT"
+    private String reportLabel;
 
     @Column(name = "VISIT_DATE")
     private String visitDate;
@@ -93,11 +91,16 @@ public class Report {
     @Enumerated(EnumType.STRING)
     @Column(name = "STATUS")
     private PaymentStatus status;
+
     @Column(name = "PAID_AMOUNT")
     private Double paidAmount;
 
     @Column(name = "SCHEDULE_NUMBER")
     private Integer scheduleNumber;
+
+    // ✅ CHAMP AJOUTÉ : Date d'engagement (obligatoire pour Promesse et Facilité)
+    @Column(name = "ENGAGEMENT_DATE", nullable = false)
+    private String engagementDate;
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("report")

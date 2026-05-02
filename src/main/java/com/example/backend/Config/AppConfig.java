@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-
 import java.util.Properties;
 
 @Configuration
@@ -22,6 +21,7 @@ public class AppConfig {
     @Bean
     public CommandLineRunner initParameters() {
         return args -> {
+            // 1. الإعدادات العادية (Mail, JWT, etc.)
             initParamIfAbsent("mailHost", "smtp.gmail.com");
             initParamIfAbsent("mailPort", "587");
             initParamIfAbsent("mailUsername", "hamauachri08@gmail.com");
@@ -31,15 +31,41 @@ public class AppConfig {
             initParamIfAbsent("cleanupHoursLimit", "24");
             initParamIfAbsent("cleanupCron", "0 * * * * *");
             initParamIfAbsent("frontendUrl", "http://localhost:4200");
-            System.out.println("✅ [AppConfig] Paramètres initialisés.");
+
+            // 2. إعدادات المراحل (Amiable & Commerciale) حسب النوع (IMP & SDB)
+            // Phase Amiable
+            initPhaseParamIfAbsent("phase amiable", "IMP", 60, 180);
+            initPhaseParamIfAbsent("phase amiable", "SDB", 80, 100);
+
+            // Phase Commerciale
+            initPhaseParamIfAbsent("phase commerciale", "IMP", 61, 270);
+            initPhaseParamIfAbsent("phase commerciale", "SDB", 10, 80);
+
+            System.out.println("✅ [AppConfig] Tous les paramètres ont été initialisés.");
         };
     }
 
+    // ميثود لزيادة الإعدادات البسيطة (Key/Value)
     private void initParamIfAbsent(String key, String defaultValue) {
         if (parameterService.getValueByKey(key) == null) {
             Parameter p = new Parameter();
             p.setKeyParam(key);
             p.setValueParam(defaultValue);
+            parameterService.updateParam(p);
+        }
+    }
+
+    // ✅ ميثود لزيادة إعدادات المراحل المركبة (بناءً على الصورة)
+    private void initPhaseParamIfAbsent(String code, String type, int debut, int fin) {
+        if (parameterService.getByCodeAndType(code, type) == null) {
+            Parameter p = new Parameter();
+            // نستخدم دمج الكود والنوع كـ Primary Key فريدة
+            p.setKeyParam(code.replace(" ", "_") + "_" + type);
+            p.setCodeParametre(code);
+            p.setTypeParametre(type);
+            p.setJourDebut(debut);
+            p.setJourFin(fin);
+            p.setValueParam(debut + " à " + fin + " jours");
             parameterService.updateParam(p);
         }
     }
@@ -53,7 +79,6 @@ public class AppConfig {
         String user = parameterService.getValueByKey("mailUsername");
         String pass = parameterService.getValueByKey("mailPassword");
 
-        // ✅ إضافة الـ Fallback باش ما يخرجش "Cannot parse null string" في أول Run
         mailSender.setHost(host != null ? host : "smtp.gmail.com");
         mailSender.setPort(port != null ? Integer.parseInt(port) : 587);
         mailSender.setUsername(user != null ? user : "hamauachri08@gmail.com");
